@@ -32,3 +32,22 @@ I want to publish a site:
 - [Gitbook](https://www.gitbook.com/) markdown as book
 - [MkDocs](https://github.com/mkdocs/mkdocs/) very popular static tool
 - [Outline](http://www.getoutline.com/) commercial docs
+
+# Usage
+
+Installation:
+
+```bash
+// *install.bash
+go generate -v .
+go install -v .
+```
+
+Run: 
+
+```bash
+// *run.bash
+markdownplayground
+```
+
+Open [http://localhost:8080](http://localhost:8080).
