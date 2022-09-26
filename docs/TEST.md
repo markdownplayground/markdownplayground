@@ -26,11 +26,20 @@ Java
 
 ```
 // Hello.java
-public static void Hello {
-  public static void main(args String[]) {
+public class Hello {
+  public static void main(String[] args) {
     System.out.println("Hello world!");
   }
 }
+```
+
+Run Java:
+
+```
+# *run.bash
+set -eux
+javac Hello.java
+java -cp . Hello
 ```
 
 Go:
