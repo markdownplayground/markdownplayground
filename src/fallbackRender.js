@@ -1,7 +1,9 @@
+import {Alert, AlertTitle, Button} from "@mui/material";
 
 export const fallbackRender = ({error, resetErrorBoundary}) => (
-    <div>
-        <h1>An error occurred: {error.message}</h1>
-        <button onClick={resetErrorBoundary}>Try again</button>
-    </div>
+    <Alert severity='error'
+           action={<Button onClick={resetErrorBoundary} color="inherit" size="small">Try again</Button>}>
+        <AlertTitle>{error.message}</AlertTitle>
+    </Alert>
+
 );
