@@ -19,8 +19,8 @@ I want to publish a site:
 
 - Statically either:
     - As a plain set of markdown files.
-- Any tool I already have.
-- A built-in publisher that makes it look like the WYSIWYG editor.
+    - Any tool I already have.
+    - A built-in publisher that makes it look like the WYSIWYG editor.
 - Dynamically:
     - The site is runnable (using sandboxed executors and Oauth login).
 

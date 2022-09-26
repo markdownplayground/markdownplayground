@@ -2,8 +2,7 @@ import React, {createRef, useEffect, useState} from 'react';
 import {CompositeDecorator, convertFromRaw, convertToRaw, Editor, EditorState} from 'draft-js';
 import "draft-js/dist/Draft.css"
 import {draftToMarkdown, markdownToDraft} from 'markdown-draft-js';
-import {useLocation} from 'react-router-dom';
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate} from 'react-router-dom';
 import {
     Alert,
     AppBar,
@@ -17,11 +16,14 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemText, Snackbar,
+    ListItemText,
+    Paper,
+    Snackbar,
     ThemeProvider,
     ToggleButton,
     ToggleButtonGroup,
-    Toolbar, Typography
+    Toolbar,
+    Typography
 } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 
@@ -37,14 +39,21 @@ import {
     FormatListBulleted,
     FormatListNumbered,
     GitHub,
-    LightMode, LinkOff,
-    PlayArrow, Save
+    LightMode,
+    LinkOff,
+    PlayArrow,
+    Save
 } from "@mui/icons-material";
 import PrismDecorator from "draft-js-prism";
 import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
 import Prism from 'prismjs'
 import MultiDecorator from "draft-js-multidecorators";
+import {Terminal} from "xterm";
+import "xterm/css/xterm.css"
+
+import {ErrorBoundary} from "react-error-boundary";
+import {fallbackRender} from "./fallbackRender";
 
 require('prismjs/components/prism-bash.min')
 require('prismjs/components/prism-go.min')
@@ -60,28 +69,38 @@ require('prismjs/components/prism-tsx.min')
 require('prismjs/components/prism-typescript.min')
 require('prismjs/components/prism-yaml.min')
 
-function getSyntax(block) {
+function detect(block) {
+    if (block.getType() !== "code-block") {
+        return {}
+    }
     const lines = block.getText()?.split("\n");
     if (lines?.length > 0) {
-        const language = lines[0].split(".").pop();
-        if (Prism.languages[language]) {
-            return language
+        const line0 = lines[0];
+        if (line0.startsWith("// ") || line0.startsWith("# ")) {
+            const split = lines[0].split(" ");
+            const split1 = split[1];
+            const exec = split1.startsWith("*");
+            const filename = exec ? split1.replace(/^\*/, '') : split1;
+            const language = split1.split(".").pop();
+            if (Prism.languages[language]) {
+                return {language, filename, exec}
+            }
         }
     }
-    return 'javascript';
+    return {language: 'javascript'};
 }
 
+const term = new Terminal();
 
 const decorator = new MultiDecorator(
     [
-        new PrismDecorator({getSyntax}),
+        new PrismDecorator({getSyntax: (block) => detect(block).language}),
         new CompositeDecorator([
             {
                 strategy: (contentBlock, callback, contentState) => {
                     contentBlock.findEntityRanges(
                         (character) => {
                             const entityKey = character?.getEntity();
-                            console.log(entityKey)
                             return (
                                 entityKey !== null &&
                                 contentState?.getEntity(entityKey).getType() === 'LINK'
@@ -92,7 +111,6 @@ const decorator = new MultiDecorator(
                 },
                 component: (props) => {
                     const {url} = props.contentState.getEntity(props.entityKey).getData();
-                    console.log(url)
                     return (
                         <a href={url} style={{
                             color: '#3b5998',
@@ -112,7 +130,7 @@ export const EditorContainer = () => {
     const navigate = useNavigate();
     const [filename, setFilename] = useState(location.pathname);
     const [error, setError] = useState();
-    const [info, setInfo] = useState()
+    const [alert, setAlert] = useState()
     const [editorState, setEditorState] = useState(() => EditorState.createEmpty(decorator));
     const [docs, setDocs] = useState([]);
 
@@ -122,7 +140,7 @@ export const EditorContainer = () => {
 
     useEffect(() => {
         setError(null);
-        fetch("/api/docs")
+        fetch("/api/files")
             .then(r => {
                 if (r.ok) {
                     return r.json()
@@ -138,7 +156,7 @@ export const EditorContainer = () => {
 
     useEffect(() => {
         setError(null);
-        fetch("/docs/" + filename)
+        fetch("/api/files/" + filename)
             .then((r) => {
                 if (r.ok) {
                     return r.text()
@@ -148,14 +166,14 @@ export const EditorContainer = () => {
             })
             .then(text => {
                 setEditorState(EditorState.createWithContent(convertFromRaw(markdownToDraft(text)), decorator));
-                setInfo({message: "Loaded " + filename})
+                setAlert({message: "Loaded " + filename})
             })
             .catch(setError)
     }, [filename])
 
     useEffect(() => {
         setError(null);
-        fetch("/docs/" + filename)
+        fetch("/api/files/" + filename)
             .then((r) => {
                 if (r.ok) {
                     return r.text()
@@ -165,7 +183,7 @@ export const EditorContainer = () => {
             })
             .then(text => {
                 setEditorState(EditorState.createWithContent(convertFromRaw(markdownToDraft(text)), decorator));
-                setInfo({message: "Loaded " + filename})
+                setAlert({message: "Loaded " + filename})
             })
             .catch(setError)
     }, [filename])
@@ -176,29 +194,53 @@ export const EditorContainer = () => {
     const currentBlockType = currentBlock
         .getType() || 'unstyled';
 
-    const play = () => {
+    const runCode = () => {
+        if (currentBlockType !== 'code-block') {
+            setAlert({severity: 'warning', message: "Please select a code block"});
+            return
+        }
         const code = currentBlock.getText();
         const name = code.split("\n")[0].split(" ").pop()
-        setInfo({message: "Run: " + name})
+
+        setError(null)
+        setAlert({message: "Running: " + name})
+        fetch("/api/run", {method: "POST", body: code})
+            .then(r => {
+                    if (r.ok) {
+                        return r.text()
+                    } else {
+                        throw new Error("Failed to run " + name + ": " + r.statusText)
+                    }
+                }
+            )
+            .then(text => text.split("\n").forEach(line => term.writeln(line)))
+            .catch(setError)
     }
+
+    useEffect(() => {
+        if (error)
+            setAlert({severity: 'error', message: error.message})
+    }, [error])
 
     const drawerWidth = 240;
 
-    const save = () => {
+    const saveFile = (filename, text) => {
         setError(null);
-        const raw = convertToRaw(editorState.getCurrentContent());
-        fetch("/docs/" + filename, {
+        fetch("/api/files/" + filename, {
             method: "PUT",
-            body: draftToMarkdown(raw, {})
+            body: text
         })
             .then(r => {
                 if (r.ok) {
-                    setInfo({message: filename + " saved"})
+                    setAlert({message: filename + " saved"})
                 } else {
                     throw new Error("failed to save " + filename + ": " + r.statusText)
                 }
             })
             .catch(setError)
+    };
+    const saveDoc = () => {
+        saveFile(filename, draftToMarkdown(convertToRaw(editorState.getCurrentContent()), {}))
     };
     const [darkMode, setDarkMode] = useState(false);
 
@@ -241,6 +283,13 @@ export const EditorContainer = () => {
 
     useEffect(() => editorRef.current?.focus(), [editorRef, editorState]);
 
+    const termRef = createRef();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => term.open(termRef.current), [])
+
+    const detected = detect(currentBlock);
+
     return <ThemeProvider theme={createTheme({
         palette: {
             mode: darkMode ? 'dark' : 'light',
@@ -257,7 +306,7 @@ export const EditorContainer = () => {
                     <div>
                         <Button color='inherit' onClick={() => setDarkMode(!darkMode)}>{!darkMode ? <DarkMode/> :
                             <LightMode/>}</Button>
-                        <Button href='https://github.com/markdownplayground' color='inherit'>
+                        <Button href='https://github.com/markdownplayground/markdownplayground' color='inherit'>
                             <GitHub/>
                         </Button>
                     </div>
@@ -292,10 +341,17 @@ export const EditorContainer = () => {
                 <Box>
                     <Toolbar>
                         <ButtonGroup>
-                            <Button onClick={() => play()}>
+                            <Button onClick={saveDoc}><Save/> Save</Button>
+                        </ButtonGroup>
+                        <ButtonGroup>
+
+                            <Button onClick={() => runCode()} disabled={!detected.exec}>
                                 <PlayArrow/> Run
                             </Button>
-                            <Button onClick={save}><Save/> Save</Button>
+                            <Button onClick={() => {
+                                saveFile(detected.filename, currentBlock.getText())}
+                            } disabled={!detected.filename||detected.exec}><Save/> Save</Button>
+
                         </ButtonGroup>
                         <ToggleButtonGroup value={currentBlockType}
                                            exclusive
@@ -341,11 +397,15 @@ export const EditorContainer = () => {
                         spellCheck={true}
 
                         blockStyleFn={(block) => {
-                            if (block.getType() === "code-block") {
-                                return " language-" + getSyntax(block)
+                            if (block?.getType() === "code-block") {
+                                return " language-" + detect(block).language
                             }
                         }}
                         keyBindingFn={(e) => {
+                            if (e.keyCode === 9) {
+                                changeIndent(e, )
+                                return ;
+                            }
                             if (e.keyCode === 13 && currentBlockType === 'code-block') {
                                 const newContentState = Modifier.insertText(editorState.getCurrentContent(), editorState.getSelection(), '\n');
                                 const newEditorState = EditorState.push(editorState, newContentState, "insert-characters");
@@ -354,16 +414,17 @@ export const EditorContainer = () => {
                             }
                             return getDefaultKeyBinding(e);
                         }}
-                        onTab={e => changeIndent(e)}
                         ref={editorRef}
                     />
-
+                </Box>
+                <Box>
+                    <ErrorBoundary fallbackRender={fallbackRender}>
+                        <Paper ref={termRef}/>
+                    </ErrorBoundary>
                 </Box>
             </Box>
-            {error && <Snackbar open={true} autoHideDuration={3000} onClose={() => setError(null)}><Alert
-                severity="error">{error.message}</Alert></Snackbar>}
-            {info && <Snackbar open={true} autoHideDuration={3000} onClose={() => setInfo(null)}><Alert
-                severity="info">{info.message}</Alert></Snackbar>}
+            {alert && <Snackbar open={true} autoHideDuration={3000} onClose={() => setAlert(null)}><Alert
+                severity={alert.severity || 'info'}>{alert.message}</Alert></Snackbar>}
         </Box></ThemeProvider>
         ;
 
