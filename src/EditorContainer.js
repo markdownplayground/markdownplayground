@@ -29,11 +29,10 @@ import "prismjs/themes/prism.min.css";
 
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
 import {
-    AddLink,
+    AddLink, Close,
     Code,
     DarkMode,
-    FormatBold,
-    FormatIndentDecrease,
+    FormatBold, FormatIndentDecrease,
     FormatIndentIncrease,
     FormatItalic,
     FormatListBulleted,
@@ -51,9 +50,6 @@ import Prism from 'prismjs'
 import MultiDecorator from "draft-js-multidecorators";
 import {Terminal} from "xterm";
 import "xterm/css/xterm.css"
-
-import {ErrorBoundary} from "react-error-boundary";
-import {fallbackRender} from "./fallbackRender";
 
 require('prismjs/components/prism-bash.min')
 require('prismjs/components/prism-go.min')
@@ -87,7 +83,7 @@ function detect(block) {
             }
         }
     }
-    return {language: 'javascript'};
+    return {language: 'bash', filename: "run.bash", exec: true};
 }
 
 const term = new Terminal();
@@ -194,6 +190,8 @@ export const EditorContainer = () => {
     const currentBlockType = currentBlock
         .getType() || 'unstyled';
 
+    const [showTerm, setShowTerm] = useState(false);
+
     const runCode = () => {
         if (currentBlockType !== 'code-block') {
             setAlert({severity: 'warning', message: "Please select a code block"});
@@ -204,6 +202,7 @@ export const EditorContainer = () => {
 
         setError(null)
         setAlert({message: "Running: " + name})
+        setShowTerm(true)
         fetch("/api/run", {method: "POST", body: code})
             .then(r => {
                     if (r.ok) {
@@ -216,6 +215,12 @@ export const EditorContainer = () => {
             .then(text => text.split("\n").forEach(line => term.writeln(line)))
             .catch(setError)
     }
+
+    useEffect(() => {
+        if (alert) {
+            term.writeln("# " + alert.message)
+        }
+    }, [alert])
 
     useEffect(() => {
         if (error)
@@ -285,8 +290,11 @@ export const EditorContainer = () => {
 
     const termRef = createRef();
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => term.open(termRef.current), [])
+    useEffect(() => {
+        term.open(termRef.current)
+        return () => term.dispose();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const detected = detect(currentBlock);
 
@@ -335,23 +343,20 @@ export const EditorContainer = () => {
             </Drawer>
             <Box
                 component="main"
-                sx={{flexGrow: 1, bgcolor: 'background.default', p: 3}}
+                sx={{flexGrow: 1, bgcolor: 'background.default', p: 2}}
             >
                 <Toolbar/>
-                <Box>
+                <Box position='fixed' sx={{bgcolor: 'background.default', zIndex: 30}}>
                     <Toolbar>
                         <ButtonGroup>
-                            <Button onClick={saveDoc}><Save/> Save</Button>
+                            <Button onClick={saveDoc}><Save/> Save Doc</Button>
                         </ButtonGroup>
                         <ButtonGroup>
-
                             <Button onClick={() => runCode()} disabled={!detected.exec}>
-                                <PlayArrow/> Run
+                                <PlayArrow/> Run Code
                             </Button>
-                            <Button onClick={() => {
-                                saveFile(detected.filename, currentBlock.getText())}
-                            } disabled={!detected.filename||detected.exec}><Save/> Save</Button>
-
+                            <Button onClick={() => saveFile(detected.filename, currentBlock.getText())}
+                                    disabled={!detected.filename || detected.exec}><Save/> Save Code</Button>
                         </ButtonGroup>
                         <ToggleButtonGroup value={currentBlockType}
                                            exclusive
@@ -389,6 +394,26 @@ export const EditorContainer = () => {
                         </ButtonGroup>
                     </Toolbar>
                 </Box>
+                <Toolbar/>
+                <Box position='fixed' sx={{
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 30,
+                    margin: 1,
+                    padding: 1,
+                    bgcolor: 'background.default',
+                    boxShadow: 2
+                }}
+                     visibility={!showTerm && 'hidden'}>
+                    <Toolbar variant='dense' sx={{justifyContent: "space-between"}}>
+                        <div>
+                            <Button onClick={() => term.clear()}>Clear</Button>
+                        </div>
+                        <div/>
+                        <Button onClick={() => setShowTerm(false)}><Close/></Button>
+                    </Toolbar>
+                    <Paper ref={termRef}/>
+                </Box>
                 <Box>
                     <Editor
                         editorState={editorState}
@@ -403,8 +428,8 @@ export const EditorContainer = () => {
                         }}
                         keyBindingFn={(e) => {
                             if (e.keyCode === 9) {
-                                changeIndent(e, )
-                                return ;
+                                changeIndent(e,)
+                                return;
                             }
                             if (e.keyCode === 13 && currentBlockType === 'code-block') {
                                 const newContentState = Modifier.insertText(editorState.getCurrentContent(), editorState.getSelection(), '\n');
@@ -417,13 +442,8 @@ export const EditorContainer = () => {
                         ref={editorRef}
                     />
                 </Box>
-                <Box>
-                    <ErrorBoundary fallbackRender={fallbackRender}>
-                        <Paper ref={termRef}/>
-                    </ErrorBoundary>
-                </Box>
             </Box>
-            {alert && <Snackbar open={true} autoHideDuration={3000} onClose={() => setAlert(null)}><Alert
+            {alert && <Snackbar open={true} autoHideDuration={10000} onClose={() => setAlert(null)}><Alert
                 severity={alert.severity || 'info'}>{alert.message}</Alert></Snackbar>}
         </Box></ThemeProvider>
         ;
