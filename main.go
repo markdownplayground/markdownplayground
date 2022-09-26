@@ -11,6 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 )
+import "embed"
+
+//go:generate npm install
+//go:generate npm run build
+
+//go:embed build
+var f embed.FS
 
 func main() {
 	r := gin.Default()
@@ -75,6 +82,11 @@ func main() {
 			return
 		}
 		c.Status(http.StatusAccepted)
+	})
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+		log.Printf("GET %q\n", path)
+		c.FileFromFS("build/"+path, http.FS(f))
 	})
 	err := r.Run()
 	if err != nil {
