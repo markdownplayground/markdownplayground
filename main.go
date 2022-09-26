@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/fs"
@@ -18,7 +19,22 @@ func main() {
 		var docs []gin.H
 		err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
 			if filepath.Ext(path) == ".md" {
-				docs = append(docs, gin.H{"path": path})
+				title := path
+				f, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				defer func() { _ = f.Close() }()
+
+				s := bufio.NewScanner(f)
+				if s.Scan() {
+					title = strings.TrimPrefix(s.Text(), "# ")
+				}
+
+				docs = append(docs, gin.H{
+					"path":  path,
+					"title": title,
+				})
 			}
 			return err
 		})
