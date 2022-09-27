@@ -2,8 +2,7 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"github.com/gin-gonic/gin"
+	"embed"
 	"io"
 	"io/fs"
 	"log"
@@ -12,8 +11,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
-import "embed"
 
 //go:generate npm install
 //go:generate npm run build
@@ -22,27 +22,43 @@ import "embed"
 var f embed.FS
 
 func runCode(c *gin.Context) {
-	log.Printf("running...")
-	data, err := io.ReadAll(c.Request.Body)
-	defer func() { _ = c.Request.Body.Close() }()
-	if err != nil {
-		c.Data(http.StatusBadRequest, "text/plain", []byte(err.Error()))
-		return
-	}
-	parts := strings.SplitN(string(data), "\n", 2)
-	name := strings.SplitN(parts[0], " ", 2)[1]
-	language := strings.TrimLeft(filepath.Ext(name), ".")
-	log.Printf("name=%s, lanugage=%s\n", name, language)
-
-	cmd := exec.Command("sh", "-c", string(data))
-	buf := &bytes.Buffer{}
-	cmd.Stdout = buf
-	cmd.Stderr = buf
-	err = cmd.Run()
-	if err != nil {
-		buf.WriteString(err.Error())
-	}
-	c.Data(http.StatusOK, "text/plain", buf.Bytes())
+	c.Stream(func(w io.Writer) bool {
+		log.Printf("runCode(...)\n")
+		data, err := io.ReadAll(c.Request.Body)
+		defer func() { _ = c.Request.Body.Close() }()
+		if err != nil {
+			c.SSEvent("error", err.Error())
+			return false
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			c.SSEvent("command", line)
+		}
+		cmd := exec.Command("sh", "-c", string(data))
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			c.SSEvent("error", err.Error())
+			return false
+		}
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			c.SSEvent("error", err.Error())
+			return false
+		}
+		err = cmd.Start()
+		if err != nil {
+			c.SSEvent("error", err.Error())
+			return false
+		}
+		s := bufio.NewScanner(io.MultiReader(stdout, stderr))
+		for s.Scan() {
+			c.SSEvent("output", s.Text())
+		}
+		err = cmd.Wait()
+		if err != nil {
+			c.SSEvent("error", err.Error())
+		}
+		return false
+	})
 }
 
 func getFile(c *gin.Context) {
