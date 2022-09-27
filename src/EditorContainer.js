@@ -1,14 +1,8 @@
-import React, { createRef, useEffect, useState } from "react";
-import {
-  CompositeDecorator,
-  convertFromRaw,
-  convertToRaw,
-  Editor,
-  EditorState,
-} from "draft-js";
+import React, {createRef, useEffect, useState} from "react";
+import {CompositeDecorator, convertFromRaw, convertToRaw, Editor, EditorState,} from "draft-js";
 import "draft-js/dist/Draft.css";
-import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
-import { useLocation, useNavigate } from "react-router-dom";
+import {draftToMarkdown, markdownToDraft} from "markdown-draft-js";
+import {useLocation, useNavigate} from "react-router-dom";
 import {
   Alert,
   AppBar,
@@ -31,10 +25,9 @@ import {
   ToggleButtonGroup,
   Toolbar,
   Typography,
-
 } from "@mui/material";
 import "prismjs/themes/prism.min.css";
-import { fetchEventSource } from "@microsoft/fetch-event-source";
+import {fetchEventSource} from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
 import {
   AddLink,
@@ -58,7 +51,7 @@ import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
 import Prism from "prismjs";
 import MultiDecorator from "draft-js-multidecorators";
-import { Terminal } from "xterm";
+import {Terminal} from "xterm";
 import "xterm/css/xterm.css";
 
 require("prismjs/components/prism-bash.min");
@@ -219,8 +212,7 @@ export const EditorContainer = () => {
   };
 
   const runCodeBlock = () => {
-    const code = getCurrentBlock().getText();
-    runCode(`sh <<EOF\n${code}\nEOF\n`);
+    runCode(getCurrentBlock().getText());
   };
 
   const drawerWidth = 240;
@@ -348,8 +340,8 @@ export const EditorContainer = () => {
             {docs
               .filter(({ path }) => path.split("/").length < 3)
               .map(({ title, path }) => (
-                <ListItem key={path} disablePadding>
-                  <ListItemButton onClick={() => setFilename(path)}>
+                <ListItem key={path} disablePadding >
+                  <ListItemButton onClick={() => setFilename(path)} selected={filename === path}>
                     <ListItemText primary={title} secondary={path} />
                   </ListItemButton>
                 </ListItem>

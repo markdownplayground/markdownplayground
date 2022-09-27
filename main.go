@@ -21,6 +21,8 @@ import (
 //go:embed build
 var f embed.FS
 
+var dir = "."
+
 func runCode(c *gin.Context) {
 	c.Stream(func(w io.Writer) bool {
 		log.Printf("runCode(...)\n")
@@ -34,6 +36,7 @@ func runCode(c *gin.Context) {
 			c.SSEvent("command", line)
 		}
 		cmd := exec.Command("sh", "-c", string(data))
+		cmd.Dir = dir
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
 			c.SSEvent("error", err.Error())
@@ -62,7 +65,7 @@ func runCode(c *gin.Context) {
 }
 
 func getFile(c *gin.Context) {
-	name := strings.TrimLeft(filepath.Clean(c.Param("name")), "/")
+	name := filepath.Join(dir, strings.TrimLeft(filepath.Clean(c.Param("name")), "/"))
 	log.Printf("getFile(%q)\n", name)
 	data, err := os.ReadFile(name)
 	if err != nil {
@@ -76,10 +79,10 @@ func getFile(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain", data)
 }
 
-func listDocs(c *gin.Context) {
-	log.Printf("listDocs\n")
+func listFiles(c *gin.Context) {
+	log.Printf("listFiles\n")
 	var docs []gin.H
-	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 		if filepath.Ext(path) == ".md" {
 			title := path
 			f, err := os.Open(path)
@@ -93,8 +96,9 @@ func listDocs(c *gin.Context) {
 				title = strings.TrimPrefix(s.Text(), "# ")
 			}
 
+			rel, _ := filepath.Rel(dir, path)
 			docs = append(docs, gin.H{
-				"path":  path,
+				"path":  rel,
 				"title": title,
 			})
 		}
@@ -110,7 +114,7 @@ func listDocs(c *gin.Context) {
 }
 
 func saveFile(c *gin.Context) {
-	name := strings.TrimLeft(filepath.Clean(c.Param("name")), "/")
+	name := filepath.Join(dir, strings.TrimLeft(filepath.Clean(c.Param("name")), "/"))
 	log.Printf("saveFile(%q)\n", name)
 	data, err := io.ReadAll(c.Request.Body)
 	defer func() { _ = c.Request.Body.Close() }()
@@ -127,9 +131,13 @@ func saveFile(c *gin.Context) {
 }
 
 func main() {
+	if len(os.Args) > 1 {
+		dir = os.Args[1]
+	}
+	log.Printf("dir=%s\n", dir)
 	r := gin.Default()
 	r.POST("/api/run", runCode)
-	r.GET("/api/files", listDocs)
+	r.GET("/api/files", listFiles)
 	r.GET("/api/files/*name", getFile)
 	r.PUT("/api/files/*name", saveFile)
 	r.NoRoute(func(c *gin.Context) {
