@@ -1,8 +1,14 @@
-import React, {createRef, useEffect, useState} from "react";
-import {CompositeDecorator, convertFromRaw, convertToRaw, Editor, EditorState,} from "draft-js";
+import React, { createRef, useEffect, useRef, useState } from "react";
+import {
+  CompositeDecorator,
+  convertFromRaw,
+  convertToRaw,
+  Editor,
+  EditorState,
+} from "draft-js";
 import "draft-js/dist/Draft.css";
-import {draftToMarkdown, markdownToDraft} from "markdown-draft-js";
-import {useLocation, useNavigate} from "react-router-dom";
+import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   AppBar,
@@ -11,6 +17,11 @@ import {
   ButtonGroup,
   createTheme,
   CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Drawer,
   LinearProgress,
@@ -20,6 +31,7 @@ import {
   ListItemText,
   Paper,
   Snackbar,
+  TextField,
   ThemeProvider,
   ToggleButton,
   ToggleButtonGroup,
@@ -27,9 +39,10 @@ import {
   Typography,
 } from "@mui/material";
 import "prismjs/themes/prism.min.css";
-import {fetchEventSource} from "@microsoft/fetch-event-source";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
 import {
+  Add,
   AddLink,
   Close,
   Code,
@@ -51,7 +64,7 @@ import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
 import Prism from "prismjs";
 import MultiDecorator from "draft-js-multidecorators";
-import {Terminal} from "xterm";
+import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 
 require("prismjs/components/prism-bash.min");
@@ -135,6 +148,7 @@ export const EditorContainer = () => {
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showNewFile, setShowNewFile] = useState(false);
 
   const getCurrentBlock = () =>
     editorState
@@ -233,12 +247,18 @@ export const EditorContainer = () => {
       .catch(setError);
   };
 
+  const markdown = draftToMarkdown(
+    convertToRaw(editorState.getCurrentContent()),
+    {}
+  );
   const saveDoc = () => {
-    saveFile(
-      filename,
-      draftToMarkdown(convertToRaw(editorState.getCurrentContent()), {})
-    );
+    saveFile(filename, markdown);
   };
+  useEffect(() => {
+    const t = setTimeout(() => saveDoc(), 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markdown]);
 
   const addLink = (e) => {
     e.preventDefault();
@@ -340,8 +360,11 @@ export const EditorContainer = () => {
             {docs
               .filter(({ path }) => path.split("/").length < 3)
               .map(({ title, path }) => (
-                <ListItem key={path} disablePadding >
-                  <ListItemButton onClick={() => setFilename(path)} selected={filename === path}>
+                <ListItem key={path} disablePadding>
+                  <ListItemButton
+                    onClick={() => setFilename(path)}
+                    selected={filename === path}
+                  >
                     <ListItemText primary={title} secondary={path} />
                   </ListItemButton>
                 </ListItem>
@@ -360,6 +383,23 @@ export const EditorContainer = () => {
           >
             <Toolbar>
               <ButtonGroup>
+                <Button onClick={() => setShowNewFile(true)}>
+                  <Add /> New Doc
+                </Button>
+                <Dialog open={showNewFile}>
+                  <DialogTitle>New doc</DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>Create a new doc</DialogContentText>
+                    <TextField
+                      autoFocus
+                      id="newFilename"
+                      margin="dense"
+                      label="Filename"
+                      fullWidth
+                      variant="standard"
+                    />
+                  </DialogContent>
+                </Dialog>
                 <Button onClick={saveDoc}>
                   <Save /> Save Doc
                 </Button>
@@ -460,42 +500,42 @@ export const EditorContainer = () => {
             <Paper ref={termRef} />
           </Box>
           <Box>
-              <Editor
-                editorState={editorState}
-                onChange={setEditorState}
-                placeholder="Tell a story..."
-                spellCheck={true}
-                blockStyleFn={(block) => {
-                  if (block?.getType() === "code-block") {
-                    return " language-" + detect(block).language;
-                  }
-                }}
-                keyBindingFn={(e) => {
-                  if (e.keyCode === 9) {
-                    changeIndent(e);
-                    return;
-                  }
-                  if (
-                    e.keyCode === 13 &&
-                    getCurrentBlock().getType() === "code-block"
-                  ) {
-                    const newContentState = Modifier.insertText(
-                      editorState.getCurrentContent(),
-                      editorState.getSelection(),
-                      "\n"
-                    );
-                    const newEditorState = EditorState.push(
-                      editorState,
-                      newContentState,
-                      "insert-characters"
-                    );
-                    setEditorState(newEditorState);
-                    return "add-newline";
-                  }
-                  return getDefaultKeyBinding(e);
-                }}
-                ref={editorRef}
-              />
+            <Editor
+              editorState={editorState}
+              onChange={setEditorState}
+              placeholder="Tell a story..."
+              spellCheck={true}
+              blockStyleFn={(block) => {
+                if (block?.getType() === "code-block") {
+                  return " language-" + detect(block).language;
+                }
+              }}
+              keyBindingFn={(e) => {
+                if (e.keyCode === 9) {
+                  changeIndent(e);
+                  return;
+                }
+                if (
+                  e.keyCode === 13 &&
+                  getCurrentBlock().getType() === "code-block"
+                ) {
+                  const newContentState = Modifier.insertText(
+                    editorState.getCurrentContent(),
+                    editorState.getSelection(),
+                    "\n"
+                  );
+                  const newEditorState = EditorState.push(
+                    editorState,
+                    newContentState,
+                    "insert-characters"
+                  );
+                  setEditorState(newEditorState);
+                  return "add-newline";
+                }
+                return getDefaultKeyBinding(e);
+              }}
+              ref={editorRef}
+            />
           </Box>
         </Box>
         {alert && (
