@@ -61,7 +61,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { detect } from "./detect";
 import { TopNav } from "./TopNav";
-import {DocList} from "./FileList";
+import { DocList } from "./FileList";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -312,7 +312,7 @@ export const EditorContainer = () => {
         >
           <Toolbar />
           <Divider />
-<DocList/>
+          <DocList />
           <Divider />
         </Drawer>
         <Box
