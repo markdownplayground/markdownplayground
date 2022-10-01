@@ -20,6 +20,9 @@ function App() {
         <ThemeProvider
           theme={createTheme({
             palette: {
+              primary: {
+                main: "#FFD700",
+              },
               mode: darkMode ? "dark" : "light",
             },
           })}
