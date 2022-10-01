@@ -23,10 +23,6 @@ import {
   Divider,
   Drawer,
   LinearProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
   Paper,
   Snackbar,
   TextField,
@@ -61,7 +57,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { detect } from "./detect";
 import { TopNav } from "./TopNav";
-import { DocList } from "./FileList";
+import { DocList } from "./DocList";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -119,7 +115,6 @@ export const EditorContainer = () => {
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty(decorator)
   );
-  const [docs, setDocs] = useState([]);
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -139,22 +134,6 @@ export const EditorContainer = () => {
   useEffect(() => {
     navigate(filename);
   }, [navigate, filename]);
-
-  useEffect(() => {
-    setAlert({ message: "Listing files" });
-    fetch("/api/files")
-      .then((r) => {
-        if (r.ok) {
-          return r.json();
-        } else {
-          throw new Error(r.statusText);
-        }
-      })
-      .then((r) => {
-        setDocs(r.docs);
-      })
-      .catch(setError);
-  }, []);
 
   useEffect(() => {
     setAlert({ message: "Loading " + filename + "..." });
@@ -312,7 +291,12 @@ export const EditorContainer = () => {
         >
           <Toolbar />
           <Divider />
-          <DocList />
+          <DocList
+            filename={filename}
+            setFilename={setFilename}
+            setAlert={setAlert}
+            setError={setError}
+          />
           <Divider />
         </Drawer>
         <Box
