@@ -263,13 +263,6 @@ export const EditorContainer = () => {
             />
           </Box>
           <Toolbar />
-          <CodeTerminal
-            setShowTerm={setShowTerm}
-            showTerm={showTerm}
-            term={term}
-            termInflight={termInflight}
-            termRef={termRef}
-          />
           <Box>
             <Editor
               editorState={editorState}
@@ -309,6 +302,13 @@ export const EditorContainer = () => {
             />
           </Box>
         </Box>
+        <CodeTerminal
+          setShowTerm={setShowTerm}
+          showTerm={showTerm}
+          term={term}
+          termInflight={termInflight}
+          termRef={termRef}
+        />
         {alert && (
           <Snackbar
             open={true}
