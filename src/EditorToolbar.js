@@ -24,11 +24,11 @@ import React from "react";
 import { EditorState } from "draft-js";
 
 export const EditorToolbar = ({
-  runCodeBlock,
+  runCode,
   detected,
-  saveCodeBlock,
+  saveCode,
   saveDoc,
-  getCurrentBlock,
+  currentBlock,
   editorState,
   setEditorState,
   changeIndent,
@@ -72,18 +72,21 @@ export const EditorToolbar = ({
           </Button>
         </ButtonGroup>
         <ButtonGroup>
-          <Button onClick={() => runCodeBlock()} disabled={!detected.exec}>
+          <Button
+            onClick={() => runCode(currentBlock.getText())}
+            disabled={!detected.exec}
+          >
             <PlayArrow /> Run Code
           </Button>
           <Button
-            onClick={() => saveCodeBlock()}
+            onClick={() => saveCode(currentBlock.getText(), detected.filename)}
             disabled={!detected.filename || detected.exec}
           >
             <Save /> Save Code
           </Button>
         </ButtonGroup>
         <ToggleButtonGroup
-          value={getCurrentBlock().getType() || "unstyled"}
+          value={currentBlock.getType() || "unstyled"}
           exclusive
           onChange={(e, style) =>
             setEditorState(RichUtils.toggleBlockType(editorState, style))

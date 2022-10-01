@@ -76,12 +76,11 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
 
-  const getCurrentBlock = () =>
-    editorState
-      .getCurrentContent()
-      .getBlockForKey(editorState.getSelection().getStartKey());
+  const currentBlock = editorState
+    .getCurrentContent()
+    .getBlockForKey(editorState.getSelection().getStartKey());
 
-  const detected = detect(getCurrentBlock());
+  const detected = detect(currentBlock);
 
   useEffect(() => {
     setAlert({ message: "Loading " + filename + "..." });
@@ -120,16 +119,8 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     });
   };
 
-  const saveCodeBlock = () => {
-    const code = getCurrentBlock().getText();
-    const name = detect(getCurrentBlock()).filename;
-
+  const saveCode = (code, name) =>
     runCode(`cat > ${name} <<EOF\n${code}\nEOF\n`);
-  };
-
-  const runCodeBlock = () => {
-    runCode(getCurrentBlock().getText());
-  };
 
   const saveFile = (filename, text) => {
     setAlert({ message: "Saving " + filename + "..." });
@@ -163,7 +154,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     if (indentDirection === "decrease") {
       e.shiftKey = true;
     }
-    const type = getCurrentBlock().getType();
+    const type = currentBlock.getType();
     if (type === "ordered-list-item" || type === "unordered-list-item") {
       setEditorState(RichUtils.onTab(e, editorState, 2));
     }
@@ -185,9 +176,9 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
       <EditorToolbar
         detected={detected}
         editorState={editorState}
-        getCurrentBlock={getCurrentBlock}
-        runCodeBlock={runCodeBlock}
-        saveCodeBlock={saveCodeBlock}
+        currentBlock={currentBlock}
+        runCode={runCode}
+        saveCode={saveCode}
         saveDoc={saveDoc}
         setEditorState={setEditorState}
         changeIndent={changeIndent}
@@ -209,10 +200,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
               changeIndent(e);
               return;
             }
-            if (
-              e.keyCode === 13 &&
-              getCurrentBlock().getType() === "code-block"
-            ) {
+            if (e.keyCode === 13 && currentBlock.getType() === "code-block") {
               const newContentState = Modifier.insertText(
                 editorState.getCurrentContent(),
                 editorState.getSelection(),
