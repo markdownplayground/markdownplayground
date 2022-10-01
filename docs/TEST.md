@@ -6,6 +6,8 @@ This tool is intended to allow you to build **tutorials** and _documentation_ th
     - Indented item
 1. Ordered list
 
+Text with a [link](http://localhost).
+
 Bash:
 
 ```bash
@@ -60,6 +62,6 @@ go run .
 Long running process:
 
 ```bash
-sleep 3
+sleep 30
 echo "Hello World!"
 ```

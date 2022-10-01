@@ -174,8 +174,6 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
   };
   const editorRef = createRef();
 
-  useEffect(() => editorRef.current?.focus(), [editorRef, editorState]);
-
   const termRef = createRef();
 
   useEffect(() => {

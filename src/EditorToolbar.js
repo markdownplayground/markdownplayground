@@ -2,6 +2,8 @@ import {
   Box,
   Button,
   ButtonGroup,
+  MenuItem,
+  Select,
   ToggleButton,
   ToggleButtonGroup,
   Toolbar,
@@ -64,6 +66,18 @@ export const EditorToolbar = ({
     }
   };
 
+  const setLanguage = (language) => {
+    const selection = editorState.getSelection();
+    const nextContentState = Modifier.setBlockData(
+      editorState.getCurrentContent(),
+      selection,
+      { language }
+    );
+    setEditorState(
+      EditorState.push(editorState, nextContentState, "change-block-data")
+    );
+  };
+
   return (
     <Box position="fixed" sx={{ bgcolor: "background.default", zIndex: 30 }}>
       <Toolbar>
@@ -81,35 +95,8 @@ export const EditorToolbar = ({
             <Save /> Save
           </Button>
         </ButtonGroup>
-
         <ToggleButtonGroup
-          value={detected.language}
           size="small"
-          exclusive
-          onChange={(e) => {
-            const selection = editorState.getSelection();
-            const nextContentState = Modifier.setBlockData(
-              editorState.getCurrentContent(),
-              selection,
-              { language: e.target.value }
-            );
-            setEditorState(
-              EditorState.push(
-                editorState,
-                nextContentState,
-                "change-block-data"
-              )
-            );
-          }}
-        >
-          {languages.map((v) => (
-            <ToggleButton key={v} value={v}>
-              {v}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-
-        <ToggleButtonGroup
           value={currentBlock.getType() || "unstyled"}
           exclusive
           onChange={(e, style) =>
@@ -130,7 +117,24 @@ export const EditorToolbar = ({
             <Code />
           </ToggleButton>
         </ToggleButtonGroup>
+        <Select
+          sx={{ width: 100 }}
+          size="small"
+          value={detected.language || ""}
+          label="Age"
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <MenuItem>
+            <em>None</em>
+          </MenuItem>
+          {languages.map((v) => (
+            <MenuItem key={v} value={v}>
+              {v}
+            </MenuItem>
+          ))}
+        </Select>
         <ToggleButtonGroup
+          size="small"
           value={editorState.getCurrentInlineStyle().toArray()}
           onChange={(style) =>
             setEditorState(RichUtils.toggleInlineStyle(editorState, style))
