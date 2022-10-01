@@ -12,13 +12,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
-  Button,
   createTheme,
   CssBaseline,
   Divider,
   Drawer,
-  LinearProgress,
-  Paper,
   Snackbar,
   ThemeProvider,
   Toolbar,
@@ -26,17 +23,17 @@ import {
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
-import { Close } from "@mui/icons-material";
 import PrismDecorator from "draft-js-prism";
 import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
 import MultiDecorator from "draft-js-multidecorators";
-import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { detect } from "./detect";
 import { TopNav } from "./TopNav";
 import { DocList } from "./DocList";
 import { EditorToolbar } from "./EditorToolbar";
+import { CodeTerminal } from "./CodeTerminal";
+import { Terminal } from "xterm";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -266,32 +263,13 @@ export const EditorContainer = () => {
             />
           </Box>
           <Toolbar />
-          <Box
-            position="fixed"
-            sx={{
-              right: 0,
-              bottom: 0,
-              zIndex: 30,
-              margin: 1,
-              padding: 1,
-              bgcolor: "background.default",
-              boxShadow: 2,
-            }}
-            visibility={!showTerm && "hidden"}
-          >
-            <Toolbar variant="dense" sx={{ justifyContent: "space-between" }}>
-              <div>
-                <Button onClick={() => term.clear()}>Clear</Button>
-                <span>{termInflight}</span>
-              </div>
-              <div />
-              <Button onClick={() => setShowTerm(false)}>
-                <Close />
-              </Button>
-            </Toolbar>
-            {termInflight > 0 && <LinearProgress />}
-            <Paper ref={termRef} />
-          </Box>
+          <CodeTerminal
+            setShowTerm={setShowTerm}
+            showTerm={showTerm}
+            term={term}
+            termInflight={termInflight}
+            termRef={termRef}
+          />
           <Box>
             <Editor
               editorState={editorState}
