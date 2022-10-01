@@ -22,11 +22,15 @@ export const CodeTerminal = ({
     }}
     visibility={!showTerm && "hidden"}
   >
-    <Toolbar variant="dense" sx={{ justifyContent: "space-between" }}>
-      <div>
-        <Button onClick={() => term.clear()}>Clear</Button>
-        <span>{termInflight}</span>
-      </div>
+    <Toolbar
+      variant="dense"
+      sx={{ justifyContent: "space-between" }}
+      disableGutters
+    >
+      <Button variant="outlined" onClick={() => term.clear()}>
+        Clear
+      </Button>
+      {termInflight > 1 && <span>{termInflight} processes running</span>}
       <div />
       <Button onClick={() => setShowTerm(false)}>
         <Close />
