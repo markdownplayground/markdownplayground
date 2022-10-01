@@ -10,13 +10,11 @@ import "draft-js/dist/Draft.css";
 import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Alert,
   Box,
   createTheme,
   CssBaseline,
   Divider,
   Drawer,
-  Snackbar,
   ThemeProvider,
   Toolbar,
 } from "@mui/material";
@@ -82,19 +80,17 @@ const decorator = new MultiDecorator([
   ]),
 ]);
 
-export const EditorContainer = () => {
+export const EditorContainer = ({setAlert }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [filename, setFilename] = useState(location.pathname);
   const [error, setError] = useState();
-  const [alert, setAlert] = useState();
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty(decorator)
   );
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [showNewFile, setShowNewFile] = useState(false);
 
   const getCurrentBlock = () =>
     editorState
@@ -245,23 +241,16 @@ export const EditorContainer = () => {
           sx={{ flexGrow: 1, bgcolor: "background.default", p: 2 }}
         >
           <Toolbar />
-          <Box
-            position="fixed"
-            sx={{ bgcolor: "background.default", zIndex: 30 }}
-          >
-            <EditorToolbar
-              detected={detected}
-              editorState={editorState}
-              getCurrentBlock={getCurrentBlock}
-              runCodeBlock={runCodeBlock}
-              saveCodeBlock={saveCodeBlock}
-              saveDoc={saveDoc}
-              setEditorState={setEditorState}
-              setShowNewFile={setShowNewFile}
-              showNewFile={showNewFile}
-              changeIndent={changeIndent}
-            />
-          </Box>
+          <EditorToolbar
+            detected={detected}
+            editorState={editorState}
+            getCurrentBlock={getCurrentBlock}
+            runCodeBlock={runCodeBlock}
+            saveCodeBlock={saveCodeBlock}
+            saveDoc={saveDoc}
+            setEditorState={setEditorState}
+            changeIndent={changeIndent}
+          />
           <Toolbar />
           <Box>
             <Editor
@@ -302,23 +291,14 @@ export const EditorContainer = () => {
             />
           </Box>
         </Box>
-        <CodeTerminal
-          setShowTerm={setShowTerm}
-          showTerm={showTerm}
-          term={term}
-          termInflight={termInflight}
-          termRef={termRef}
-        />
-        {alert && (
-          <Snackbar
-            open={true}
-            autoHideDuration={10000}
-            onClose={() => setAlert(null)}
-          >
-            <Alert severity={alert.severity || "info"}>{alert.message}</Alert>
-          </Snackbar>
-        )}
       </Box>
+      <CodeTerminal
+        setShowTerm={setShowTerm}
+        showTerm={showTerm}
+        term={term}
+        termInflight={termInflight}
+        termRef={termRef}
+      />
     </ThemeProvider>
   );
 };

@@ -1,17 +1,12 @@
 import {
+  Box,
   Button,
   ButtonGroup,
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Toolbar,
 } from "@mui/material";
 import {
-  Add,
   AddLink,
   Code,
   FormatBold,
@@ -29,8 +24,6 @@ import React from "react";
 import { EditorState } from "draft-js";
 
 export const EditorToolbar = ({
-  setShowNewFile,
-  showNewFile,
   runCodeBlock,
   detected,
   saveCodeBlock,
@@ -71,90 +64,75 @@ export const EditorToolbar = ({
   };
 
   return (
-    <Toolbar>
-      <ButtonGroup>
-        <Button onClick={() => setShowNewFile(true)}>
-          <Add /> New Doc
-        </Button>
-        <Dialog open={showNewFile}>
-          <DialogTitle>New doc</DialogTitle>
-          <DialogContent>
-            <DialogContentText>Create a new doc</DialogContentText>
-            <TextField
-              autoFocus
-              id="newFilename"
-              margin="dense"
-              label="Filename"
-              fullWidth
-              variant="standard"
-            />
-          </DialogContent>
-        </Dialog>
-        <Button onClick={saveDoc}>
-          <Save /> Save Doc
-        </Button>
-      </ButtonGroup>
-      <ButtonGroup>
-        <Button onClick={() => runCodeBlock()} disabled={!detected.exec}>
-          <PlayArrow /> Run Code
-        </Button>
-        <Button
-          onClick={() => saveCodeBlock()}
-          disabled={!detected.filename || detected.exec}
+    <Box position="fixed" sx={{ bgcolor: "background.default", zIndex: 30 }}>
+      <Toolbar>
+        <ButtonGroup>
+          <Button onClick={saveDoc}>
+            <Save /> Save Doc
+          </Button>
+        </ButtonGroup>
+        <ButtonGroup>
+          <Button onClick={() => runCodeBlock()} disabled={!detected.exec}>
+            <PlayArrow /> Run Code
+          </Button>
+          <Button
+            onClick={() => saveCodeBlock()}
+            disabled={!detected.filename || detected.exec}
+          >
+            <Save /> Save Code
+          </Button>
+        </ButtonGroup>
+        <ToggleButtonGroup
+          value={getCurrentBlock().getType() || "unstyled"}
+          exclusive
+          onChange={(e, style) =>
+            setEditorState(RichUtils.toggleBlockType(editorState, style))
+          }
         >
-          <Save /> Save Code
-        </Button>
-      </ButtonGroup>
-      <ToggleButtonGroup
-        value={getCurrentBlock().getType() || "unstyled"}
-        exclusive
-        onChange={(e, style) =>
-          setEditorState(RichUtils.toggleBlockType(editorState, style))
-        }
-      >
-        <ToggleButton value="header-one">H1</ToggleButton>
-        <ToggleButton value="header-two">H2</ToggleButton>
-        <ToggleButton value="header-three">H3</ToggleButton>
-        <ToggleButton value="unstyled">Normal</ToggleButton>
-        <ToggleButton value="unordered-list-item">
-          <FormatListBulleted />
-        </ToggleButton>
-        <ToggleButton value="ordered-list-item">
-          <FormatListNumbered />
-        </ToggleButton>
-        <ToggleButton value="code-block">
-          <Code />
-        </ToggleButton>
-      </ToggleButtonGroup>
-      <ToggleButtonGroup
-        value={editorState.getCurrentInlineStyle().toArray()}
-        onChange={(style) =>
-          setEditorState(RichUtils.toggleInlineStyle(editorState, style))
-        }
-      >
-        <ToggleButton value="BOLD">
-          <FormatBold />
-        </ToggleButton>
-        <ToggleButton value="ITALIC">
-          <FormatItalic />
-        </ToggleButton>
-      </ToggleButtonGroup>
-      <ButtonGroup>
-        <Button onClick={(e) => changeIndent(e, "decrease")}>
-          <FormatIndentDecrease />
-        </Button>
-        <Button onClick={(e) => changeIndent(e, "increase")}>
-          <FormatIndentIncrease />
-        </Button>
-      </ButtonGroup>
-      <ButtonGroup>
-        <Button onClick={addLink}>
-          <AddLink />
-        </Button>
-        <Button onClick={removeLink}>
-          <LinkOff />
-        </Button>
-      </ButtonGroup>
-    </Toolbar>
+          <ToggleButton value="header-one">H1</ToggleButton>
+          <ToggleButton value="header-two">H2</ToggleButton>
+          <ToggleButton value="header-three">H3</ToggleButton>
+          <ToggleButton value="unstyled">Normal</ToggleButton>
+          <ToggleButton value="unordered-list-item">
+            <FormatListBulleted />
+          </ToggleButton>
+          <ToggleButton value="ordered-list-item">
+            <FormatListNumbered />
+          </ToggleButton>
+          <ToggleButton value="code-block">
+            <Code />
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <ToggleButtonGroup
+          value={editorState.getCurrentInlineStyle().toArray()}
+          onChange={(style) =>
+            setEditorState(RichUtils.toggleInlineStyle(editorState, style))
+          }
+        >
+          <ToggleButton value="BOLD">
+            <FormatBold />
+          </ToggleButton>
+          <ToggleButton value="ITALIC">
+            <FormatItalic />
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <ButtonGroup>
+          <Button onClick={(e) => changeIndent(e, "decrease")}>
+            <FormatIndentDecrease />
+          </Button>
+          <Button onClick={(e) => changeIndent(e, "increase")}>
+            <FormatIndentIncrease />
+          </Button>
+        </ButtonGroup>
+        <ButtonGroup>
+          <Button onClick={addLink}>
+            <AddLink />
+          </Button>
+          <Button onClick={removeLink}>
+            <LinkOff />
+          </Button>
+        </ButtonGroup>
+      </Toolbar>
+    </Box>
   );
 };
