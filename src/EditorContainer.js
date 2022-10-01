@@ -61,6 +61,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { detect } from "./detect";
 import { TopNav } from "./TopNav";
+import {DocList} from "./FileList";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -311,20 +312,7 @@ export const EditorContainer = () => {
         >
           <Toolbar />
           <Divider />
-          <List>
-            {docs
-              .filter(({ path }) => path.split("/").length < 3)
-              .map(({ title, path }) => (
-                <ListItem key={path} disablePadding>
-                  <ListItemButton
-                    onClick={() => setFilename(path)}
-                    selected={filename === path}
-                  >
-                    <ListItemText primary={title} secondary={path} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-          </List>
+<DocList/>
           <Divider />
         </Drawer>
         <Box
