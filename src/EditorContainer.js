@@ -11,7 +11,6 @@ import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
-  AppBar,
   Box,
   Button,
   ButtonGroup,
@@ -35,7 +34,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Toolbar,
-  Typography,
+
 } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -45,15 +44,12 @@ import {
   AddLink,
   Close,
   Code,
-  DarkMode,
   FormatBold,
   FormatIndentDecrease,
   FormatIndentIncrease,
   FormatItalic,
   FormatListBulleted,
   FormatListNumbered,
-  GitHub,
-  LightMode,
   LinkOff,
   PlayArrow,
   Save,
@@ -61,10 +57,11 @@ import {
 import PrismDecorator from "draft-js-prism";
 import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
-import Prism from "prismjs";
 import MultiDecorator from "draft-js-multidecorators";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
+import {detect} from "./detect";
+import {TopNav} from "./TopNav";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -80,26 +77,7 @@ require("prismjs/components/prism-tsx.min");
 require("prismjs/components/prism-typescript.min");
 require("prismjs/components/prism-yaml.min");
 
-function detect(block) {
-  if (block.getType() !== "code-block") {
-    return {};
-  }
-  const lines = block.getText()?.split("\n");
-  if (lines?.length > 0) {
-    const line0 = lines[0];
-    if (line0.startsWith("// ") || line0.startsWith("# ")) {
-      const split = lines[0].split(" ");
-      const split1 = split[1];
-      const exec = split1.startsWith("*");
-      const filename = exec ? split1.replace(/^\*/, "") : split1;
-      const language = split1.split(".").pop();
-      if (Prism.languages[language]) {
-        return { language, filename, exec };
-      }
-    }
-  }
-  return { language: "bash", filename: "code.bash", exec: true };
-}
+
 
 const term = new Terminal();
 
@@ -322,26 +300,7 @@ export const EditorContainer = () => {
     >
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <AppBar
-          position="fixed"
-          sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        >
-          <Toolbar sx={{ justifyContent: "space-between" }}>
-            <Typography>Markdown Playground</Typography>
-            <div />
-            <div>
-              <Button color="inherit" onClick={() => setDarkMode(!darkMode)}>
-                {!darkMode ? <DarkMode /> : <LightMode />}
-              </Button>
-              <Button
-                href="https://github.com/markdownplayground/markdownplayground"
-                color="inherit"
-              >
-                <GitHub />
-              </Button>
-            </div>
-          </Toolbar>
-        </AppBar>
+        <TopNav darkMode={darkMode} setDarkMode={setDarkMode}/>
         <Drawer
           variant="permanent"
           sx={{
