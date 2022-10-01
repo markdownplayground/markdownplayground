@@ -3,7 +3,8 @@
 This tool is intended to allow you to build **tutorials** and _documentation_ that is saved into Markdown files.
 
 - Unordered list
-    - Indented item
+  - Indented item
+
 1. Ordered list
 
 Bash:
@@ -46,9 +47,15 @@ Go:
 // Hello.go
 package main
 
-func main() {
+func main(args []string) {
   println("Hello world!")
 }
+```
+
+Run Go:
+
+```bash
+go run .
 ```
 
 Long running process:
