@@ -36,8 +36,7 @@ export const EditorToolbar = ({
   changeIndent,
   languages,
 }) => {
-  const addLink = (e) => {
-    e.preventDefault();
+  const addLink = () => {
     const contentState = editorState.getCurrentContent();
     const contentStateWithEntity = contentState.createEntity(
       "LINK",
@@ -57,13 +56,9 @@ export const EditorToolbar = ({
     );
   };
 
-  const removeLink = (e) => {
-    e.preventDefault();
-    const { editorState } = this.state;
+  const removeLink = () => {
     const selection = editorState.getSelection();
-    if (!selection.isCollapsed()) {
-      setEditorState(RichUtils.toggleLink(editorState, selection, null));
-    }
+    setEditorState(RichUtils.toggleLink(editorState, selection, null));
   };
 
   const setLanguage = (language) => {

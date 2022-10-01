@@ -12,17 +12,16 @@ import { Box, Toolbar } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
-import PrismDecorator from "draft-js-prism";
 import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
-import MultiDecorator from "draft-js-multidecorators";
 import "xterm/css/xterm.css";
 import { EditorToolbar } from "./EditorToolbar";
 import { CodeTerminal } from "./CodeTerminal";
 import { Terminal } from "xterm";
 import { detect } from "./detect";
+import { createLinkDecorator } from "./link";
+import createPrismDecorator from "draft-js-prism-decorator";
 
-const Prism = require("prismjs");
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
 require("prismjs/components/prism-graphql.min");
@@ -39,38 +38,9 @@ require("prismjs/components/prism-yaml.min");
 
 const term = new Terminal();
 
-const decorator = new MultiDecorator([
-  new PrismDecorator({
-    Prism: Prism,
-    getSyntax: (block) => detect(block).language,
-  }),
-  new CompositeDecorator([
-    {
-      strategy: (contentBlock, callback, contentState) => {
-        contentBlock.findEntityRanges((character) => {
-          const entityKey = character?.getEntity();
-          return (
-            entityKey !== null &&
-            contentState?.getEntity(entityKey).getType() === "LINK"
-          );
-        }, callback);
-      },
-      component: (props) => {
-        const { url } = props.contentState.getEntity(props.entityKey).getData();
-        return (
-          <a
-            href={url}
-            style={{
-              color: "#3b5998",
-              textDecoration: "underline",
-            }}
-          >
-            {props.children}
-          </a>
-        );
-      },
-    },
-  ]),
+const decorator = new CompositeDecorator([
+  createLinkDecorator(),
+  createPrismDecorator(),
 ]);
 
 export const EditorContainer = ({ filename, setAlert, setError }) => {
