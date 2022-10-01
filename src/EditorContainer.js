@@ -80,7 +80,7 @@ const decorator = new MultiDecorator([
   ]),
 ]);
 
-export const EditorContainer = ({setAlert }) => {
+export const EditorContainer = ({ setAlert }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [filename, setFilename] = useState(location.pathname);
