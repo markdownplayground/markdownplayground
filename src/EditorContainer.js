@@ -192,7 +192,6 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
         detected={detected}
         runCode={runCode}
         saveCode={saveCode}
-        saveDoc={saveDoc}
         setEditorState={setEditorState}
         changeIndent={changeIndent}
         languages={[

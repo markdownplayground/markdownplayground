@@ -28,7 +28,6 @@ export const EditorToolbar = ({
   runCode,
   detected,
   saveCode,
-  saveDoc,
   currentBlock,
   editorState,
   setEditorState,
@@ -69,22 +68,17 @@ export const EditorToolbar = ({
     <Box position="fixed" sx={{ bgcolor: "background.default", zIndex: 30 }}>
       <Toolbar>
         <ButtonGroup>
-          <Button onClick={saveDoc}>
-            <Save /> Save Doc
-          </Button>
-        </ButtonGroup>
-        <ButtonGroup>
           <Button
             onClick={() => runCode(currentBlock.getText())}
             disabled={!detected.exec}
           >
-            <PlayArrow /> Run Code
+            <PlayArrow /> Run
           </Button>
           <Button
             onClick={() => saveCode(currentBlock.getText(), detected.filename)}
             disabled={!detected.filename || detected.exec}
           >
-            <Save /> Save Code
+            <Save /> Save
           </Button>
         </ButtonGroup>
 

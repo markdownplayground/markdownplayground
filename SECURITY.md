@@ -6,4 +6,4 @@ N/A
 
 ## Reporting a Vulnerability
 
-Email alex@alexecollins.com
+Email: alex@alexecollins.com
