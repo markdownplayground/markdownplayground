@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { fallbackRender } from "./fallbackRender";
 import { BrowserRouter } from "react-router-dom";
-import { Alert, createTheme, Snackbar, ThemeProvider } from "@mui/material";
+import {
+  Alert,
+  createTheme,
+  CssBaseline,
+  Snackbar,
+  ThemeProvider,
+} from "@mui/material";
 import { Page } from "./Page";
 
 function App() {
@@ -18,6 +24,7 @@ function App() {
             },
           })}
         >
+          <CssBaseline />
           <Page
             alert={alert}
             setAlert={setAlert}

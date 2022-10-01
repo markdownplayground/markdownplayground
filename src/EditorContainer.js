@@ -9,7 +9,7 @@ import {
 import "draft-js/dist/Draft.css";
 import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, CssBaseline, Divider, Drawer, Toolbar } from "@mui/material";
+import { Box, Divider, Drawer, Toolbar } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
@@ -198,7 +198,6 @@ export const EditorContainer = ({ setAlert, darkMode, setDarkMode }) => {
   return (
     <>
       <Box sx={{ display: "flex" }}>
-        <CssBaseline />
         <TopNav darkMode={darkMode} setDarkMode={setDarkMode} />
         <Drawer
           variant="permanent"
