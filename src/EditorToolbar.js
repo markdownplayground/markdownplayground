@@ -22,6 +22,7 @@ import {
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
 import React from "react";
 import { EditorState } from "draft-js";
+import Modifier from "draft-js/lib/DraftModifier";
 
 export const EditorToolbar = ({
   runCode,
@@ -32,6 +33,7 @@ export const EditorToolbar = ({
   editorState,
   setEditorState,
   changeIndent,
+  languages,
 }) => {
   const addLink = (e) => {
     e.preventDefault();
@@ -85,6 +87,34 @@ export const EditorToolbar = ({
             <Save /> Save Code
           </Button>
         </ButtonGroup>
+
+        <ToggleButtonGroup
+          value={detected.language}
+          size="small"
+          exclusive
+          onChange={(e) => {
+            const selection = editorState.getSelection();
+            const nextContentState = Modifier.setBlockData(
+              editorState.getCurrentContent(),
+              selection,
+              { language: e.target.value }
+            );
+            setEditorState(
+              EditorState.push(
+                editorState,
+                nextContentState,
+                "change-block-data"
+              )
+            );
+          }}
+        >
+          {languages.map((v) => (
+            <ToggleButton key={v} value={v}>
+              {v}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+
         <ToggleButtonGroup
           value={currentBlock.getType() || "unstyled"}
           exclusive

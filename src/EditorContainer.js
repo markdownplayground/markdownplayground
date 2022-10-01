@@ -17,11 +17,12 @@ import getDefaultKeyBinding from "draft-js/lib/getDefaultKeyBinding";
 import Modifier from "draft-js/lib/DraftModifier";
 import MultiDecorator from "draft-js-multidecorators";
 import "xterm/css/xterm.css";
-import { detect } from "./detect";
 import { EditorToolbar } from "./EditorToolbar";
 import { CodeTerminal } from "./CodeTerminal";
 import { Terminal } from "xterm";
+import { detect } from "./detect";
 
+const Prism = require("prismjs");
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
 require("prismjs/components/prism-graphql.min");
@@ -39,7 +40,10 @@ require("prismjs/components/prism-yaml.min");
 const term = new Terminal();
 
 const decorator = new MultiDecorator([
-  new PrismDecorator({ getSyntax: (block) => detect(block).language }),
+  new PrismDecorator({
+    Prism: Prism,
+    getSyntax: (block) => detect(block).language,
+  }),
   new CompositeDecorator([
     {
       strategy: (contentBlock, callback, contentState) => {
@@ -119,8 +123,8 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     });
   };
 
-  const saveCode = (code, name) =>
-    runCode(`cat > ${name} <<EOF\n${code}\nEOF\n`);
+  const saveCode = (code, filename) =>
+    runCode(`cat > ${filename} <<EOF\n${code}\nEOF\n`);
 
   const saveFile = (filename, text) => {
     setAlert({ message: "Saving " + filename + "..." });
@@ -174,14 +178,29 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
   return (
     <>
       <EditorToolbar
-        detected={detected}
         editorState={editorState}
         currentBlock={currentBlock}
+        detected={detected}
         runCode={runCode}
         saveCode={saveCode}
         saveDoc={saveDoc}
         setEditorState={setEditorState}
         changeIndent={changeIndent}
+        languages={[
+          "bash",
+          "go",
+          "graphql",
+          "javascript",
+          "java",
+          "json",
+          "lua",
+          "protobuf",
+          "python",
+          "rust",
+          "tsx",
+          "typescript",
+          "yaml",
+        ]}
       />
       <Toolbar />
       <Box>
@@ -192,7 +211,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
           spellCheck={true}
           blockStyleFn={(block) => {
             if (block?.getType() === "code-block") {
-              return " language-" + detect(block).language;
+              return " language-" + detected.language;
             }
           }}
           keyBindingFn={(e) => {

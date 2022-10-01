@@ -8,8 +8,7 @@ This tool is intended to allow you to build **tutorials** and _documentation_ th
 
 Bash:
 
-```
-# *hello.bash
+```bash
 echo "Hello world!"
 ```
 
@@ -24,7 +23,7 @@ function yes() {
 
 Java
 
-```
+```java
 // Hello.java
 public class Hello {
   public static void main(String[] args) {
@@ -35,8 +34,7 @@ public class Hello {
 
 Run Java:
 
-```
-# *run.bash
+```bash
 set -eux
 javac Hello.java
 java -cp . Hello
@@ -44,19 +42,18 @@ java -cp . Hello
 
 Go:
 
-```
+```go
 // Hello.go
 package main
 
-func main(args []string) {
+func main() {
   println("Hello world!")
 }
 ```
 
 Long running process:
 
-```
-# *sleep.bash
+```bash
 sleep 3
 echo "Hello World!"
 ```
