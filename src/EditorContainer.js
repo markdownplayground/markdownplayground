@@ -9,15 +9,7 @@ import {
 import "draft-js/dist/Draft.css";
 import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Box,
-  createTheme,
-  CssBaseline,
-  Divider,
-  Drawer,
-  ThemeProvider,
-  Toolbar,
-} from "@mui/material";
+import { Box, CssBaseline, Divider, Drawer, Toolbar } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
@@ -80,7 +72,7 @@ const decorator = new MultiDecorator([
   ]),
 ]);
 
-export const EditorContainer = ({ setAlert }) => {
+export const EditorContainer = ({ setAlert, darkMode, setDarkMode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [filename, setFilename] = useState(location.pathname);
@@ -90,7 +82,6 @@ export const EditorContainer = ({ setAlert }) => {
   );
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
 
   const getCurrentBlock = () =>
     editorState
@@ -205,13 +196,7 @@ export const EditorContainer = ({ setAlert }) => {
   }, []);
 
   return (
-    <ThemeProvider
-      theme={createTheme({
-        palette: {
-          mode: darkMode ? "dark" : "light",
-        },
-      })}
-    >
+    <>
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
         <TopNav darkMode={darkMode} setDarkMode={setDarkMode} />
@@ -299,6 +284,6 @@ export const EditorContainer = ({ setAlert }) => {
         termInflight={termInflight}
         termRef={termRef}
       />
-    </ThemeProvider>
+    </>
   );
 };
