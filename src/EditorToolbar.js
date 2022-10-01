@@ -118,14 +118,13 @@ export const EditorToolbar = ({
           </ToggleButton>
         </ToggleButtonGroup>
         <Select
-          sx={{ width: 100 }}
+          sx={{ width: 120 }}
           size="small"
           value={detected.language || ""}
-          label="Age"
           onChange={(e) => setLanguage(e.target.value)}
         >
           <MenuItem>
-            <em>None</em>
+            <em>none</em>
           </MenuItem>
           {languages.map((v) => (
             <MenuItem key={v} value={v}>
