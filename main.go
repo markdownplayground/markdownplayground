@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	"os"
+	os "os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -83,6 +83,9 @@ func listFiles(c *gin.Context) {
 	log.Printf("listFiles\n")
 	var docs []gin.H
 	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if len(strings.Split(path, string(os.PathSeparator))) > 2 {
+			return filepath.SkipDir
+		}
 		if filepath.Ext(path) == ".md" {
 			title := path
 			f, err := os.Open(path)

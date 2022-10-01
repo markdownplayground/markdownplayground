@@ -5,7 +5,7 @@ export const DocList = ({ filename, setFilename, setAlert, setError }) => {
   const [docs, setDocs] = useState([]);
 
   useEffect(() => {
-    setAlert({ message: "Listing files" });
+    setAlert({ message: "Listing docs..." });
     fetch("/api/files")
       .then((r) => {
         if (r.ok) {
@@ -16,24 +16,23 @@ export const DocList = ({ filename, setFilename, setAlert, setError }) => {
       })
       .then((r) => {
         setDocs(r.docs);
+        setAlert(null);
       })
       .catch(setError);
   }, [setAlert, setError]);
 
   return (
     <List>
-      {docs
-        .filter(({ path }) => path.split("/").length < 3)
-        .map(({ title, path }) => (
-          <ListItem key={path} disablePadding>
-            <ListItemButton
-              onClick={() => setFilename(path)}
-              selected={filename === path}
-            >
-              <ListItemText primary={title} secondary={path} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+      {docs.map(({ title, path }) => (
+        <ListItem key={path} disablePadding>
+          <ListItemButton
+            onClick={() => setFilename(path)}
+            selected={filename === path}
+          >
+            <ListItemText primary={title} secondary={path} />
+          </ListItemButton>
+        </ListItem>
+      ))}
     </List>
   );
 };

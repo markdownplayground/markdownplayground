@@ -87,6 +87,9 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
   const detected = detect(currentBlock);
 
   useEffect(() => {
+    if (!filename.endsWith(".md")) {
+      return;
+    }
     setAlert({ message: "Loading " + filename + "..." });
     fetch("/api/files/" + filename)
       .then((r) => {
@@ -106,6 +109,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
         setAlert({ message: "Loaded " + filename });
       })
       .catch(setError);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filename]);
 
   const runCode = (code) => {
@@ -136,7 +140,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
         if (r.ok) {
           setAlert({ message: filename + " saved" });
         } else {
-          throw new Error("failed to save " + filename + ": " + r.statusText);
+          throw new Error("Failed to save " + filename + ": " + r.statusText);
         }
       })
       .catch(setError);
@@ -146,7 +150,12 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     convertToRaw(editorState.getCurrentContent()),
     {}
   );
-  const saveDoc = () => saveFile(filename, markdown);
+  const saveDoc = () => {
+    if (!filename.endsWith("md")) {
+      return;
+    }
+    saveFile(filename, markdown);
+  };
   useEffect(() => {
     const t = setTimeout(() => saveDoc(), 3000);
     return () => clearTimeout(t);

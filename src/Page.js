@@ -14,6 +14,7 @@ export const Page = ({ setAlert, darkMode, setDarkMode }) => {
 
   useEffect(() => {
     if (error) setAlert({ severity: "error", message: error.message });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   useEffect(() => navigate(filename), [navigate, filename]);
