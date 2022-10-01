@@ -34,7 +34,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Toolbar,
-
 } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
@@ -60,8 +59,8 @@ import Modifier from "draft-js/lib/DraftModifier";
 import MultiDecorator from "draft-js-multidecorators";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
-import {detect} from "./detect";
-import {TopNav} from "./TopNav";
+import { detect } from "./detect";
+import { TopNav } from "./TopNav";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -76,8 +75,6 @@ require("prismjs/components/prism-rust.min");
 require("prismjs/components/prism-tsx.min");
 require("prismjs/components/prism-typescript.min");
 require("prismjs/components/prism-yaml.min");
-
-
 
 const term = new Terminal();
 
@@ -300,7 +297,7 @@ export const EditorContainer = () => {
     >
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <TopNav darkMode={darkMode} setDarkMode={setDarkMode}/>
+        <TopNav darkMode={darkMode} setDarkMode={setDarkMode} />
         <Drawer
           variant="permanent"
           sx={{
