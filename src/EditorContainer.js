@@ -19,7 +19,7 @@ import { EditorToolbar } from "./EditorToolbar";
 import { CodeTerminal } from "./CodeTerminal";
 import { Terminal } from "xterm";
 import { detect } from "./detect";
-import { createLinkDecorator } from "./link";
+import { createLinkDecorator } from "./link-decorator";
 import createPrismDecorator from "draft-js-prism-decorator";
 
 require("prismjs/components/prism-bash.min");
