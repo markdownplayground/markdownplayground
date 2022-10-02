@@ -4,11 +4,6 @@ import (
 	"bufio"
 	"embed"
 	"fmt"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
-	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"io/fs"
 	"log"
@@ -18,6 +13,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/docker/docker/api/types"
 	"github.com/gin-gonic/gin"
@@ -47,8 +48,12 @@ func runCode(c *gin.Context) {
 			c.SSEvent("error", fmt.Errorf("failed to get data: %v", err))
 			return false
 		}
-		for _, line := range strings.Split(string(data), "\n") {
-			c.SSEvent("command", line)
+		for i, line := range strings.Split(string(data), "\n") {
+			if i == 0 {
+				c.SSEvent("command", fmt.Sprintf("$ %s", line))
+			} else {
+				c.SSEvent("command", line)
+			}
 		}
 		c.Writer.Flush()
 		log.Printf("creating docker client...")
@@ -76,15 +81,20 @@ func runCode(c *gin.Context) {
 		if containerName == "" {
 			log.Printf("creating container\n")
 			resp, err := cli.ContainerCreate(ctx, &container.Config{
-				Cmd:   []string{"sleep", "600"},
+				Cmd:   []string{"sleep", "3600"}, // 10h
 				Image: "ubuntu",
 				Labels: map[string]string{
 					"markdownlayground/sessionid": sessionid,
 				},
 			}, &container.HostConfig{
-				AutoRemove: true,
-				CapDrop:    []string{"ALL"},
-				Resources:  container.Resources{},
+				AutoRemove:     true,
+				CapDrop:        []string{"ALL"},
+				Privileged:     false,
+				ReadonlyRootfs: false,
+				Resources: container.Resources{
+					CPUShares: 1000,
+					Memory:    6.4e+7, // 64mb
+				},
 			}, &network.NetworkingConfig{}, &v1.Platform{}, sessionid)
 			if err != nil {
 				c.SSEvent("error", fmt.Errorf("failed to create container: %v", err))
