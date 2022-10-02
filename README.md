@@ -38,7 +38,6 @@ I want to publish a site:
 Installation:
 
 ```bash
-# *install.bash
 go generate -v .
 go install -v .
 ```
@@ -46,7 +45,6 @@ go install -v .
 Run:
 
 ```bash
-# *run.bash
 markdownplayground
 ```
 
