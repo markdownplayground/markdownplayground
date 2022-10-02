@@ -1,6 +1,10 @@
 # Markdown Playground
 
-Markdown is a common format used for docs. Unlike a Jyptier notebook, there’s no good way to “run” a markdown file. By which I mean:
+![screenshot](screenshot.png)
+
+Markdown is a common format used for docs, I want a "runnable markdown" websie: 
+
+By which I mean:
 
 - Code examples should be runnable by clicking on a button.
 - The output of the code should appear on screen, next to the code.
@@ -18,11 +22,11 @@ I also want a better editing experience:
 I want to publish a site:
 
 - Statically either:
-  - As a plain set of markdown files.
-  - Any tool I already have.
-  - A built-in publisher that makes it look like the WYSIWYG editor.
+    - As a plain set of markdown files.
+    - Any tool I already have.
+    - A built-in publisher that makes it look like the WYSIWYG editor.
 - Dynamically:
-  - The site is runnable (using sandboxed executors and Oauth login).
+    - The site is runnable (using sandboxed executors and Oauth login).
 
 # Comparables
 
