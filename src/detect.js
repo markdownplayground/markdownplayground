@@ -1,5 +1,3 @@
-import Prism from "prismjs";
-
 export function detect(block) {
   if (block.getType() !== "code-block") {
     return {};
@@ -14,9 +12,7 @@ export function detect(block) {
       const split1 = split[1];
       const exec = split1.startsWith("*");
       const filename = exec ? split1.replace(/^\*/, "") : split1;
-      if (Prism.languages[language]) {
-        return { language, filename, exec };
-      }
+      return { language, filename, exec };
     }
   }
   return { language: "bash", filename: "code." + language, exec: exec };
