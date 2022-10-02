@@ -28,6 +28,16 @@ I want to publish a site:
 - Dynamically:
   - The site is runnable (using sandboxed executors and Oauth login).
 
+# Usage
+
+Download the [latest release](https://github.com/markdownplayground/markdownplayground/releases/latest), then in a directory containing your docs:
+
+```bash
+markdownplayground
+```
+
+Open [http://localhost:8080](http://localhost:8080).
+
 # Comparables
 
 - [MarkDoc](https://markdoc.dev/) general docs (Stripe)
@@ -36,20 +46,3 @@ I want to publish a site:
 - [Gitbook](https://www.gitbook.com/) markdown as book
 - [MkDocs](https://github.com/mkdocs/mkdocs/) very popular static tool
 - [Outline](http://www.getoutline.com/) commercial docs
-
-# Usage
-
-Installation:
-
-```bash
-go generate -v .
-go install -v .
-```
-
-Run:
-
-```bash
-markdownplayground
-```
-
-Open [http://localhost:8080](http://localhost:8080).
