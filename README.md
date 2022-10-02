@@ -2,11 +2,9 @@
 
 ![screenshot](screenshot.png)
 
-Markdown is a common format used for docs, I want a "runnable markdown" websie:
+Markdown is a common format used for docs, I want a "runnable markdown" website:
 
-By which I mean:
-
-- Code examples should be runnable by clicking on a button.
+- Code examples should be runnable by just clicking on a button.
 - The output of the code should appear on screen, next to the code.
 - The execution could be sandboxed using Docker.
 - Environment variables should persist between executions.
