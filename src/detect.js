@@ -15,5 +15,5 @@ export function detect(block) {
       return { language, filename, exec };
     }
   }
-  return { language: "bash", filename: "code." + language, exec: exec };
+  return { language, filename: "code." + language, exec };
 }
