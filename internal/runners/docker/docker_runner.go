@@ -3,6 +3,8 @@ package docker
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -10,7 +12,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/markdownplayground/markdownplayground/internal/runners"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
-	"log"
 )
 
 /*
