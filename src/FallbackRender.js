@@ -1,6 +1,6 @@
 import { Alert, AlertTitle, Button } from "@mui/material";
 
-export const fallbackRender = ({ error, resetErrorBoundary }) => (
+export const FallbackRender = ({ error, resetErrorBoundary }) => (
   <Alert
     severity="error"
     action={

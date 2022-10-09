@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { fallbackRender } from "./fallbackRender";
+import { FallbackRender } from "./FallbackRender";
 import { BrowserRouter } from "react-router-dom";
 import {
   Alert,
@@ -15,7 +15,7 @@ function App() {
   const [darkMode, setDarkMode] = useState();
   const [alert, setAlert] = useState();
   return (
-    <ErrorBoundary fallbackRender={fallbackRender}>
+    <ErrorBoundary fallbackRender={FallbackRender}>
       <BrowserRouter>
         <ThemeProvider
           theme={createTheme({
