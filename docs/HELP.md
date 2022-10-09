@@ -13,13 +13,19 @@ Executable block:
 echo "Hello world!"
 ```
 
-File block:
+Savable block:
 
 ```javascript
 // hello.js
 function yes() {
   console.log("Hello world!");
 }
+```
+
+You can see the file:
+
+```bash
+cat hello.js
 ```
 
 You can have long running processes:
