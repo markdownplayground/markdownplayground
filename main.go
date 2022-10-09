@@ -14,13 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
-	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/markdownplayground/markdownplayground/internal/runners/docker"
 
-	"github.com/docker/docker/api/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,20 +27,22 @@ var f embed.FS
 
 var dir = "."
 
+var runner = docker.New()
+
 func runCode(c *gin.Context) {
 	c.Stream(func(w io.Writer) bool {
 		log.Printf("runCode(...)\n")
 		// poor man's session id
-		sessionid, _ := c.Cookie("sessionid")
-		if sessionid == "" {
-			sessionid = fmt.Sprintf("%x", rand.Int())
-			c.SetCookie("sessionid", sessionid, math.MaxInt, "", "", false, true)
+		sessionID, _ := c.Cookie("session-id")
+		if sessionID == "" {
+			sessionID = fmt.Sprintf("%x", rand.Int())
 		}
-		log.Printf("sessionid=%s\n", sessionid)
+		c.SetCookie("session-id", sessionID, math.MaxInt, "", "", false, true)
+		log.Printf("sessionID=%s\n", sessionID)
 		data, err := io.ReadAll(c.Request.Body)
 		defer func() { _ = c.Request.Body.Close() }()
 		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to get data: %v", err))
+			c.SSEvent("error", fmt.Sprintf("failed to get data: %v", err))
 			return false
 		}
 		for i, line := range strings.Split(string(data), "\n") {
@@ -56,86 +53,20 @@ func runCode(c *gin.Context) {
 			}
 		}
 		c.Writer.Flush()
-		log.Printf("creating docker client...")
-		cli, err := client.NewClientWithOpts(client.FromEnv)
+		log.Printf("creating runner...")
+		attach, err := runner.Run(c.Request.Context(), sessionID, string(data))
 		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to create docker client: %v", err))
+			c.SSEvent("error", fmt.Sprintf("failed to attach to container exec: %v", err))
 			return false
 		}
-		ctx := c.Request.Context()
-		log.Printf("listing containers...")
-		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-			Filters: filters.Args{},
-		})
-		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to list containers: %v", err))
-			return false
-		}
-		var containerName string
-		for _, c := range containers {
-			log.Printf("container=%s\n", c.ID)
-			if c.Labels["markdownlayground/sessionid"] == sessionid {
-				containerName = c.ID
-			}
-		}
-		if containerName == "" {
-			log.Printf("creating container\n")
-			resp, err := cli.ContainerCreate(ctx, &container.Config{
-				Cmd:   []string{"sleep", "3600"}, // 10h
-				Image: "ubuntu",
-				Labels: map[string]string{
-					"markdownlayground/sessionid": sessionid,
-				},
-			}, &container.HostConfig{
-				AutoRemove:     true,
-				CapDrop:        []string{"ALL"},
-				Privileged:     false,
-				ReadonlyRootfs: false,
-				Resources: container.Resources{
-					CPUShares: 1000,
-					Memory:    6.4e+7, // 64mb
-				},
-			}, &network.NetworkingConfig{}, &v1.Platform{}, sessionid)
-			if err != nil {
-				c.SSEvent("error", fmt.Errorf("failed to create container: %v", err))
-				return false
-			}
-			containerName = resp.ID
-		}
-		log.Printf("starting container=%s\n", containerName)
-
-		if err := cli.ContainerStart(ctx, containerName, types.ContainerStartOptions{}); err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to start container: %v", err))
-			return false
-		}
-		log.Printf("creating exec...\n")
-		exec, err := cli.ContainerExecCreate(ctx, containerName, types.ExecConfig{
-			AttachStdin:  true,
-			AttachStderr: true,
-			AttachStdout: true,
-			Tty:          true,
-			Cmd:          []string{"sh", "-c", string(data)},
-		})
-		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to container exec: %v", err))
-			return false
-		}
-		log.Printf("attaching to exec...\n")
-		attach, err := cli.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{
-			Tty: true,
-		})
-		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to attach to container exec: %v", err))
-			return false
-		}
-		defer attach.Close()
-		s := bufio.NewScanner(io.MultiReader(attach.Reader))
+		defer func() { _ = attach.Close() }()
+		s := bufio.NewScanner(attach.Reader)
 		for s.Scan() {
 			c.SSEvent("output", s.Text())
 			c.Writer.Flush()
 		}
 		if err != nil {
-			c.SSEvent("error", fmt.Errorf("failed to scan data: %v", err))
+			c.SSEvent("error", fmt.Sprintf("failed to scan data: %v", err))
 		}
 		return false
 	})
@@ -147,10 +78,10 @@ func getFile(c *gin.Context) {
 	data, err := os.ReadFile(name)
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.JSON(http.StatusNotFound, fmt.Errorf("failed to read file: %v", err))
+			c.JSON(http.StatusNotFound, fmt.Sprintf("failed to read file: %v", err))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, fmt.Errorf("failed to read file: %v", err))
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to read file: %v", err))
 		return
 	}
 	c.Data(http.StatusOK, "text/plain", data)
@@ -185,7 +116,7 @@ func listFiles(c *gin.Context) {
 		return err
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Errorf("failed to list files: %v", err))
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to list files: %v", err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -199,12 +130,12 @@ func saveFile(c *gin.Context) {
 	data, err := io.ReadAll(c.Request.Body)
 	defer func() { _ = c.Request.Body.Close() }()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Errorf("failed to read body: %v", err))
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("failed to read body: %v", err))
 		return
 	}
 	err = os.WriteFile(name, data, 0644)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Errorf("failed to write file: %v", err))
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to write file: %v", err))
 		return
 	}
 	c.Status(http.StatusAccepted)
