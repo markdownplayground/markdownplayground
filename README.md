@@ -31,6 +31,7 @@ I want to publish a site:
 Download the [latest release](https://github.com/markdownplayground/markdownplayground/releases/latest), then in a directory containing your docs:
 
 ```bash
+docker pull ubuntu ;# make sure you have the image
 markdownplayground
 ```
 
