@@ -21,6 +21,7 @@ import { Terminal } from "xterm";
 import { detect } from "./detect";
 import { createLinkDecorator } from "./link-decorator";
 import createPrismDecorator from "draft-js-prism-decorator";
+import Prism from "prismjs";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -40,7 +41,10 @@ const term = new Terminal();
 
 const decorator = new CompositeDecorator([
   createLinkDecorator(),
-  createPrismDecorator(),
+  createPrismDecorator({
+    // this decorator explodes if the language is unknown
+    filter: (block) => Prism.languages[block.getData().get("language")],
+  }),
 ]);
 
 export const EditorContainer = ({ filename, setAlert, setError }) => {
@@ -121,7 +125,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     {}
   );
   const saveDoc = () => {
-    if (!filename.endsWith("md")) {
+    if (!filename.endsWith("md") || !markdown) {
       return;
     }
     saveFile(filename, markdown);
