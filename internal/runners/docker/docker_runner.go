@@ -3,8 +3,6 @@ package docker
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -12,9 +10,19 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/markdownplayground/markdownplayground/internal/runners"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"log"
 )
 
-const sessionIDLabel = "markdown-playground/session-id"
+/*
+The docker executor achieves isolation as follows.
+
+* Each session only gets a single container.
+* The container is run without privilege, all caps are dropped, and resource limited to 64Mb and 1 CPU.
+* After 10h, the container will exit (if not sooner).
+
+*/
+
+const sessionIDLabel = "markdown-playground/sessionID"
 
 type runner struct{}
 
@@ -40,7 +48,7 @@ func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunRe
 	if containerID == "" {
 		log.Printf("creating container\n")
 		resp, err := cli.ContainerCreate(ctx, &container.Config{
-			Cmd:   []string{"cat"},
+			Cmd:   []string{"sleep", "3600"}, // 10h
 			Image: "ubuntu",
 			Labels: map[string]string{
 				sessionIDLabel: sessionID,
