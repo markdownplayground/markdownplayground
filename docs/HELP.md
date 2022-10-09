@@ -4,8 +4,8 @@ This document is here to help you understand how to write executable documentati
 
 ## There are two main types of code blocks:
 
-- **executable blocks** are blocks that have the language `bash`.
-- **savable blocks** are blocks whose first line contains the filename to save the file out as.
+- **Executable blocks** are blocks that have the language `bash`.
+- **Savable blocks** are blocks whose first line contains the filename to save the file out as.
 
 Executable block:
 
