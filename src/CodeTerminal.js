@@ -1,9 +1,17 @@
-import { Box, Button, LinearProgress, Paper, Toolbar } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  LinearProgress,
+  Paper,
+  Toolbar,
+} from "@mui/material";
 import { Close } from "@mui/icons-material";
 import React from "react";
 
 export const CodeTerminal = ({
   showTerm,
+  resetTerm,
   setShowTerm,
   term,
   termInflight,
@@ -27,11 +35,16 @@ export const CodeTerminal = ({
       sx={{ justifyContent: "space-between" }}
       disableGutters
     >
-      <Button variant="outlined" onClick={() => term.clear()}>
-        Clear
-      </Button>
+      <ButtonGroup>
+        <Button variant="outlined" onClick={() => term.clear()}>
+          Clear
+        </Button>
+        <Button variant="outlined" onClick={() => resetTerm()}>
+          Reset
+        </Button>
+      </ButtonGroup>
       {termInflight > 1 && <span>{termInflight} processes running</span>}
-      <div />
+      <Box />
       <Button onClick={() => setShowTerm(false)}>
         <Close />
       </Button>

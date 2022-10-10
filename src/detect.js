@@ -8,12 +8,9 @@ export function detect(block) {
   if (lines?.length > 0) {
     const line0 = lines[0];
     if (line0.startsWith("// ") || line0.startsWith("# ")) {
-      const split = lines[0].split(" ");
-      const split1 = split[1];
-      const exec = split1.startsWith("*");
-      const filename = exec ? split1.replace(/^\*/, "") : split1;
+      const filename = lines[0].split(" ")[1];
       return { language, filename, exec };
     }
   }
-  return { language, filename: "code." + language, exec };
+  return { language, exec };
 }

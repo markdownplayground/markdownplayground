@@ -4,11 +4,12 @@ import {
   convertFromRaw,
   convertToRaw,
   Editor,
+  EditorBlock,
   EditorState,
 } from "draft-js";
 import "draft-js/dist/Draft.css";
 import { draftToMarkdown, markdownToDraft } from "markdown-draft-js";
-import { Box, Toolbar } from "@mui/material";
+import { Box, IconButton, Toolbar } from "@mui/material";
 import "prismjs/themes/prism.min.css";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import RichUtils from "draft-js/lib/RichTextEditorUtil";
@@ -22,6 +23,7 @@ import { detect } from "./detect";
 import { createLinkDecorator } from "./link-decorator";
 import createPrismDecorator from "draft-js-prism-decorator";
 import Prism from "prismjs";
+import { PlayCircle, Save } from "@mui/icons-material";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -90,7 +92,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
     setShowTerm(true);
 
     setTermInflight((v) => v + 1);
-    fetchEventSource("/api/run", {
+    fetchEventSource("/api/terminal/run", {
       method: "POST",
       body: code,
       onmessage: (msg) => {
@@ -115,6 +117,20 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
           setAlert({ message: filename + " saved" });
         } else {
           throw new Error("Failed to save " + filename + ": " + r.statusText);
+        }
+      })
+      .catch(setError);
+  };
+
+  const resetTerm = () => {
+    fetch("/api/terminal/reset", {
+      method: "POST",
+    })
+      .then((r) => {
+        if (r.ok) {
+          term.clear();
+        } else {
+          term.writeln("⚠️ Failed to reset term: " + r.statusText);
         }
       })
       .catch(setError);
@@ -162,8 +178,6 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
         editorState={editorState}
         currentBlock={currentBlock}
         detected={detected}
-        runCode={runCode}
-        saveCode={saveCode}
         setEditorState={setEditorState}
         changeIndent={changeIndent}
         languages={[
@@ -189,11 +203,6 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
           onChange={setEditorState}
           placeholder="Tell a story..."
           spellCheck={true}
-          blockStyleFn={(block) => {
-            if (block?.getType() === "code-block") {
-              return " language-" + detected.language;
-            }
-          }}
           keyBindingFn={(e) => {
             if (e.keyCode === 9) {
               changeIndent(e);
@@ -215,16 +224,54 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
             }
             return getDefaultKeyBinding(e);
           }}
+          blockRendererFn={blockRendererFnFactory({ runCode, saveCode })}
           ref={editorRef}
         />
       </Box>
       <CodeTerminal
         setShowTerm={setShowTerm}
         showTerm={showTerm}
+        resetTerm={resetTerm}
         term={term}
         termInflight={termInflight}
         termRef={termRef}
       />
     </>
+  );
+};
+
+const blockRendererFnFactory = (props) => (block) => {
+  if (block.getType() === "code-block") {
+    return { component: CodeBlock, editable: true, props };
+  }
+};
+
+const CodeBlock = (props) => {
+  const { block, blockProps } = props;
+  const { filename, exec } = detect(block);
+  return (
+    <Box>
+      <Box>
+        {exec && (
+          <IconButton
+            onClick={() => blockProps.runCode(block.getText())}
+            edge={"start"}
+          >
+            <PlayCircle />
+          </IconButton>
+        )}
+        {filename && (
+          <IconButton
+            onClick={() => blockProps.saveCode(block.getText(), filename)}
+            edge={"start"}
+          >
+            <Save />{" "}
+          </IconButton>
+        )}
+      </Box>
+      <Box>
+        <EditorBlock {...props} />
+      </Box>
+    </Box>
   );
 };

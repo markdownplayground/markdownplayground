@@ -33,12 +33,7 @@ func runCode(c *gin.Context) {
 	c.Stream(func(w io.Writer) bool {
 		log.Printf("runCode(...)\n")
 		// poor man's session id
-		sessionID, _ := c.Cookie("session-id")
-		if sessionID == "" {
-			sessionID = fmt.Sprintf("%x", rand.Int())
-		}
-		c.SetCookie("session-id", sessionID, math.MaxInt, "", "", false, true)
-		log.Printf("sessionID=%s\n", sessionID)
+		sessionID := getSessionID(c)
 		data, err := io.ReadAll(c.Request.Body)
 		defer func() { _ = c.Request.Body.Close() }()
 		if err != nil {
@@ -70,6 +65,26 @@ func runCode(c *gin.Context) {
 		}
 		return false
 	})
+}
+
+func getSessionID(c *gin.Context) string {
+	v, _ := c.Cookie("session-id")
+	if v == "" {
+		v = fmt.Sprintf("%x", rand.Int())
+	}
+	c.SetCookie("session-id", v, math.MaxInt, "", "", false, true)
+	log.Printf("sessionID=%s\n", v)
+	return v
+}
+
+func resetExecutor(c *gin.Context) {
+	sessionID := getSessionID(c)
+	err := runner.Reset(c.Request.Context(), sessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to reset terminal: %v", err))
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func getFile(c *gin.Context) {
@@ -147,7 +162,8 @@ func main() {
 	}
 	log.Printf("dir=%s\n", dir)
 	r := gin.Default()
-	r.POST("/api/run", runCode)
+	r.POST("/api/terminal/run", runCode)
+	r.POST("/api/terminal/reset", resetExecutor)
 	r.GET("/api/files", listFiles)
 	r.GET("/api/files/*name", getFile)
 	r.PUT("/api/files/*name", saveFile)

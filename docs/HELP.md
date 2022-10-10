@@ -31,7 +31,15 @@ cat hello.js
 You can have long running processes:
 
 ```bash
+# sleep.bash
 set -eux
 sleep 30
 echo "Hello World!"
+```
+
+You can use standard shell commands:
+
+```bash
+ls
+ps -aef
 ```

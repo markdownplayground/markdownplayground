@@ -11,5 +11,6 @@ type RunResult struct {
 }
 
 type Interface interface {
-	Run(ctx context.Context, sessionid, code string) (*RunResult, error)
+	Run(ctx context.Context, sessionID, code string) (*RunResult, error)
+	Reset(ctx context.Context, sessionID string) error
 }

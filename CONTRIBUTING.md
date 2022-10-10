@@ -17,10 +17,10 @@ To run the UI:
 npm start
 ```
 
-Before pushing, install you pre-push hook:
+Install pre-commit hook:
 
 ```bash
-cat > .git/hooks/pre-push <<EOF
+cat > .git/hooks/pre-commit <<EOF
 set -eux
 go vet .
 goimports -w .
@@ -29,7 +29,7 @@ git diff --exit-code
 go generate .
 go build .
 EOF
-chmod +x .git/hooks/pre-push
+chmod +x .git/hooks/pre-commit
 ```
 
 To build the binary:
