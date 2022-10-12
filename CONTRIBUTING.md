@@ -27,7 +27,7 @@ goimports -w .
 npx prettier --write .
 git diff --exit-code
 go generate .
-go build .
+go install .
 EOF
 chmod +x .git/hooks/pre-commit
 ```
