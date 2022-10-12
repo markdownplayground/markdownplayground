@@ -23,7 +23,7 @@ import { detect } from "./detect";
 import { createLinkDecorator } from "./link-decorator";
 import createPrismDecorator from "draft-js-prism-decorator";
 import Prism from "prismjs";
-import { PlayCircle, Save } from "@mui/icons-material";
+import { CopyAll, PlayCircle, Save } from "@mui/icons-material";
 
 require("prismjs/components/prism-bash.min");
 require("prismjs/components/prism-go.min");
@@ -55,13 +55,25 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
   );
   const [termInflight, setTermInflight] = useState(0);
   const [showTerm, setShowTerm] = useState(false);
+  const [editEnabled, setEditEnabled] = useState(false);
 
   const currentBlock = editorState
     .getCurrentContent()
     .getBlockForKey(editorState.getSelection().getStartKey());
 
   const detected = detect(currentBlock);
-
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => {
+        if (r.ok) {
+          return r.json();
+        } else {
+          throw new Error(r.statusText);
+        }
+      })
+      .then((json) => setEditEnabled(json.editEnabled))
+      .catch(setError);
+  }, [setError]);
   useEffect(() => {
     if (!filename.endsWith(".md")) {
       return;
@@ -174,29 +186,33 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
 
   return (
     <>
-      <EditorToolbar
-        editorState={editorState}
-        currentBlock={currentBlock}
-        detected={detected}
-        setEditorState={setEditorState}
-        changeIndent={changeIndent}
-        languages={[
-          "bash",
-          "go",
-          "graphql",
-          "javascript",
-          "java",
-          "json",
-          "lua",
-          "protobuf",
-          "python",
-          "rust",
-          "tsx",
-          "typescript",
-          "yaml",
-        ]}
-      />
-      <Toolbar />
+      {editEnabled && (
+        <>
+          <EditorToolbar
+            editorState={editorState}
+            currentBlock={currentBlock}
+            detected={detected}
+            setEditorState={setEditorState}
+            changeIndent={changeIndent}
+            languages={[
+              "bash",
+              "go",
+              "graphql",
+              "javascript",
+              "java",
+              "json",
+              "lua",
+              "protobuf",
+              "python",
+              "rust",
+              "tsx",
+              "typescript",
+              "yaml",
+            ]}
+          />
+          <Toolbar />
+        </>
+      )}
       <Box>
         <Editor
           editorState={editorState}
@@ -224,7 +240,11 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
             }
             return getDefaultKeyBinding(e);
           }}
-          blockRendererFn={blockRendererFnFactory({ runCode, saveCode })}
+          blockRendererFn={blockRendererFnFactory({
+            runCode,
+            saveCode,
+            setAlert,
+          })}
           ref={editorRef}
         />
       </Box>
@@ -265,9 +285,18 @@ const CodeBlock = (props) => {
             onClick={() => blockProps.saveCode(block.getText(), filename)}
             edge={"start"}
           >
-            <Save />{" "}
+            <Save />
           </IconButton>
         )}
+        <IconButton
+          onClick={() => {
+            navigator.clipboard.writeText(block.getText());
+            blockProps.setAlert({ message: "Copied" });
+          }}
+          edge={"start"}
+        >
+          <CopyAll />
+        </IconButton>
       </Box>
       <Box>
         <EditorBlock {...props} />

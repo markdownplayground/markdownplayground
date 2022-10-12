@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"embed"
+	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -13,6 +14,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/markdownplayground/markdownplayground/internal/runners"
+	"github.com/markdownplayground/markdownplayground/internal/runners/local"
 
 	"github.com/markdownplayground/markdownplayground/internal/runners/docker"
 
@@ -27,44 +31,52 @@ var f embed.FS
 
 var dir = "."
 
-var runner = docker.New()
-
-func runCode(c *gin.Context) {
-	c.Stream(func(w io.Writer) bool {
-		log.Printf("runCode(...)\n")
-		// poor man's session id
-		sessionID := getSessionID(c)
-		data, err := io.ReadAll(c.Request.Body)
-		defer func() { _ = c.Request.Body.Close() }()
-		if err != nil {
-			c.SSEvent("error", fmt.Sprintf("failed to get data: %v", err))
-			return false
-		}
-		for i, line := range strings.Split(string(data), "\n") {
-			if i == 0 {
-				c.SSEvent("command", fmt.Sprintf("$ %s", line))
-			} else {
-				c.SSEvent("command", line)
+func getConfigFactory(editEnabled bool) func(c *gin.Context) {
+	type Config struct {
+		EditEnabled bool `json:"editEnabled"`
+	}
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, Config{editEnabled})
+	}
+}
+func runCodeFactory(runner runners.Interface) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Stream(func(w io.Writer) bool {
+			log.Printf("runCode(...)\n")
+			// poor man's session id
+			sessionID := getSessionID(c)
+			data, err := io.ReadAll(c.Request.Body)
+			defer func() { _ = c.Request.Body.Close() }()
+			if err != nil {
+				c.SSEvent("error", fmt.Sprintf("failed to get data: %v", err))
+				return false
 			}
-		}
-		c.Writer.Flush()
-		log.Printf("creating runner...")
-		attach, err := runner.Run(c.Request.Context(), sessionID, string(data))
-		if err != nil {
-			c.SSEvent("error", fmt.Sprintf("failed to attach to container exec: %v", err))
-			return false
-		}
-		defer func() { _ = attach.Close() }()
-		s := bufio.NewScanner(attach.Reader)
-		for s.Scan() {
-			c.SSEvent("output", s.Text())
+			for i, line := range strings.Split(string(data), "\n") {
+				if i == 0 {
+					c.SSEvent("command", fmt.Sprintf("$ %s", line))
+				} else {
+					c.SSEvent("command", line)
+				}
+			}
 			c.Writer.Flush()
-		}
-		if err != nil {
-			c.SSEvent("error", fmt.Sprintf("failed to scan data: %v", err))
-		}
-		return false
-	})
+			log.Printf("creating runner...")
+			attach, err := runner.Run(c.Request.Context(), sessionID, string(data))
+			if err != nil {
+				c.SSEvent("error", fmt.Sprintf("failed to attach to container exec: %v", err))
+				return false
+			}
+			defer func() { _ = attach.Close() }()
+			s := bufio.NewScanner(attach.Reader)
+			for s.Scan() {
+				c.SSEvent("output", s.Text())
+				c.Writer.Flush()
+			}
+			if err != nil {
+				c.SSEvent("error", fmt.Sprintf("failed to scan data: %v", err))
+			}
+			return false
+		})
+	}
 }
 
 func getSessionID(c *gin.Context) string {
@@ -77,14 +89,16 @@ func getSessionID(c *gin.Context) string {
 	return v
 }
 
-func resetExecutor(c *gin.Context) {
-	sessionID := getSessionID(c)
-	err := runner.Reset(c.Request.Context(), sessionID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to reset terminal: %v", err))
-		return
+func resetExecutorFactory(runner runners.Interface) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		sessionID := getSessionID(c)
+		err := runner.Reset(c.Request.Context(), sessionID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to reset terminal: %v", err))
+			return
+		}
+		c.Status(http.StatusNoContent)
 	}
-	c.Status(http.StatusNoContent)
 }
 
 func getFile(c *gin.Context) {
@@ -157,13 +171,20 @@ func saveFile(c *gin.Context) {
 }
 
 func main() {
-	if len(os.Args) > 1 {
-		dir = os.Args[1]
+	editEnabled := flag.Bool("e", false, "enable editing")
+	runnerName := flag.String("r", "docker", "[docker|local]")
+	flag.Parse()
+	log.Printf("dir=%s, runner=%s, editEnabled=%v\n", dir, *runnerName, *editEnabled)
+	var runner runners.Interface
+	if *runnerName == "local" {
+		runner = local.New(dir)
+	} else {
+		runner = docker.New()
 	}
-	log.Printf("dir=%s\n", dir)
 	r := gin.Default()
-	r.POST("/api/terminal/run", runCode)
-	r.POST("/api/terminal/reset", resetExecutor)
+	r.GET("/api/config", getConfigFactory(*editEnabled))
+	r.POST("/api/terminal/run", runCodeFactory(runner))
+	r.POST("/api/terminal/reset", resetExecutorFactory(runner))
 	r.GET("/api/files", listFiles)
 	r.GET("/api/files/*name", getFile)
 	r.PUT("/api/files/*name", saveFile)
