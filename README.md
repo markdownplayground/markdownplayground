@@ -1,7 +1,5 @@
 # Markdown Playground
 
-![screenshot](screenshot.png)
-
 Markdown is a common format used for docs, I want a "runnable markdown" website:
 
 - Code examples should be runnable by just clicking on a button.
@@ -36,6 +34,24 @@ markdownplayground
 ```
 
 Open [http://localhost:8080](http://localhost:8080).
+
+If you want to use the local executor:
+
+```bash
+markdownplayground -r local
+```
+
+If you want a different directory:
+
+```bash
+markdownplayground ../other-dir
+```
+
+Enable edit mode:
+
+```bash
+markdownplayground -e
+```
 
 # Comparables
 

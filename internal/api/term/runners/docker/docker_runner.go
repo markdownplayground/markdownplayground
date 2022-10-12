@@ -10,7 +10,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/markdownplayground/markdownplayground/internal/runners"
+	"github.com/markdownplayground/markdownplayground/internal/api/term/runners"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 

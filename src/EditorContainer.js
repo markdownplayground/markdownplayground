@@ -219,6 +219,7 @@ export const EditorContainer = ({ filename, setAlert, setError }) => {
           onChange={setEditorState}
           placeholder="Tell a story..."
           spellCheck={true}
+          readOnly={!editEnabled}
           keyBindingFn={(e) => {
             if (e.keyCode === 9) {
               changeIndent(e);

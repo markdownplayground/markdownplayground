@@ -6,7 +6,7 @@ import (
 	"io"
 	"os/exec"
 
-	"github.com/markdownplayground/markdownplayground/internal/runners"
+	"github.com/markdownplayground/markdownplayground/internal/api/term/runners"
 )
 
 type runner struct {
