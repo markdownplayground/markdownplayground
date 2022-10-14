@@ -6,6 +6,7 @@ require (
 	github.com/docker/docker v20.10.18+incompatible
 	github.com/gin-gonic/gin v1.8.1
 	github.com/opencontainers/image-spec v1.0.2
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 )
 
 require (
