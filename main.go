@@ -57,6 +57,10 @@ func main() {
 	r.GET("/api/files/*name", f.GetFile)
 	if editEnabled {
 		r.PUT("/api/files/*name", f.SaveFile)
+	} else {
+		r.PUT("/api/files/*name", func(c *gin.Context) {
+			c.Status(http.StatusForbidden)
+		})
 	}
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
