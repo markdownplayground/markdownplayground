@@ -27,11 +27,11 @@ The docker executor achieves isolation as follows.
 
 */
 
-const sessionIDLabel = "markdown-playground/sessionID"
+const sessionIDLabel = "markdown-playground/session-id"
 
 type runner struct{}
 
-func (r runner) Reset(ctx context.Context, session runners.Session) error {
+func (r *runner) Reset(ctx context.Context, session runners.Session) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %v", err)
@@ -50,7 +50,7 @@ func (r runner) Reset(ctx context.Context, session runners.Session) error {
 	return nil
 }
 
-func (r runner) Run(ctx context.Context, session runners.Session, code string) (*runners.RunResult, error) {
+func (r *runner) Run(ctx context.Context, session runners.Session, code string) (*runners.RunResult, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %v", err)
@@ -67,7 +67,7 @@ func (r runner) Run(ctx context.Context, session runners.Session, code string) (
 		autoRemove := os.Getenv("DOCKER_AUTO_REMOVE") != "false"
 		log.Printf("creating container, image=%s, autoRemove=%v\n", image, autoRemove)
 		resp, err := cli.ContainerCreate(ctx, &container.Config{
-			Cmd:        []string{"sleep 3600"}, // 10h
+			Cmd:        []string{"sleep 3600"}, // 1h
 			Image:      image,
 			WorkingDir: "/wd",
 			Entrypoint: []string{"sh", "-c"},

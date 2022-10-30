@@ -26,7 +26,8 @@ I want to publish a site:
 
 # Usage
 
-Download the [latest release](https://github.com/markdownplayground/markdownplayground/releases/latest), then in a directory containing your docs:
+Download the [latest release](https://github.com/markdownplayground/markdownplayground/releases/latest), then in a
+directory containing your docs:
 
 ```bash
 docker pull ubuntu ;# make sure you have the image
@@ -34,6 +35,26 @@ markdownplayground
 ```
 
 Open [http://localhost:8080](http://localhost:8080).
+
+If you want to use the Kubernetes executor:
+
+```bash
+kubectl create serviceaccount markdownplayground
+```
+
+```bash
+kubectl create -f - <<EOF
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: markdownplayground
+value: -1
+EOF
+```
+
+```bash
+markdownplayground -r k8s
+```
 
 If you want to use the local executor:
 

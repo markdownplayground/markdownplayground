@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/markdownplayground/markdownplayground/internal/api/term/runners/k8s"
+
 	"github.com/gin-gonic/gin"
 	"github.com/markdownplayground/markdownplayground/internal/api/config"
 	"github.com/markdownplayground/markdownplayground/internal/api/files"
@@ -42,11 +44,9 @@ func main() {
 	c := config.Config{EditEnabled: editEnabled}
 	r.GET("/api/config", c.GetConfig)
 
-	var runner runners.Interface
-	if runnerName == "local" {
-		runner = local.New(dir)
-	} else {
-		runner = docker.New()
+	runner, err := newRunner(runnerName, dir)
+	if err != nil {
+		log.Fatal(err)
 	}
 	t := term.New(runner)
 	r.POST("/api/terminal/run", t.RunCode)
@@ -75,5 +75,16 @@ func main() {
 	}()
 	if err := r.Run("localhost:8080"); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func newRunner(runnerName string, dir string) (runners.Interface, error) {
+	switch runnerName {
+	case "local":
+		return local.New(dir), nil
+	case "k8s":
+		return k8s.New()
+	default:
+		return docker.New(), nil
 	}
 }
