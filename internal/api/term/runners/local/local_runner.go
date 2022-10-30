@@ -13,11 +13,11 @@ type runner struct {
 	dir string
 }
 
-func (r runner) Reset(ctx context.Context, sessionID string) error {
+func (r runner) Reset(ctx context.Context, session runners.Session) error {
 	return fmt.Errorf("not supported")
 }
 
-func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunResult, error) {
+func (r runner) Run(ctx context.Context, session runners.Session, code string) (*runners.RunResult, error) {
 	cmd := exec.Command("sh", "-c", string(code))
 	cmd.Dir = r.dir
 	stdout, err := cmd.StdoutPipe()

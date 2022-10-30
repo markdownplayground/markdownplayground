@@ -31,12 +31,12 @@ const sessionIDLabel = "markdown-playground/sessionID"
 
 type runner struct{}
 
-func (r runner) Reset(ctx context.Context, sessionID string) error {
+func (r runner) Reset(ctx context.Context, session runners.Session) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
-	containerID, err := getContainerID(ctx, sessionID, cli)
+	containerID, err := getContainerID(ctx, session, cli)
 	if err != nil {
 		return fmt.Errorf("failed to get container ID: %v", err)
 	}
@@ -50,12 +50,12 @@ func (r runner) Reset(ctx context.Context, sessionID string) error {
 	return nil
 }
 
-func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunResult, error) {
+func (r runner) Run(ctx context.Context, session runners.Session, code string) (*runners.RunResult, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %v", err)
 	}
-	containerID, err := getContainerID(ctx, sessionID, cli)
+	containerID, err := getContainerID(ctx, session, cli)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunRe
 			WorkingDir: "/wd",
 			Entrypoint: []string{"sh", "-c"},
 			Labels: map[string]string{
-				sessionIDLabel: sessionID,
+				sessionIDLabel: session,
 			},
 		}, &container.HostConfig{
 			AutoRemove:     autoRemove,
@@ -86,7 +86,7 @@ func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunRe
 				NanoCPUs: 0.5e+9, // 0.5 CPU
 				Memory:   6.4e+7, // 64Mb
 			},
-		}, &network.NetworkingConfig{}, &v1.Platform{}, sessionID)
+		}, &network.NetworkingConfig{}, &v1.Platform{}, session)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create container: %v", err)
 		}
@@ -119,7 +119,7 @@ func (r runner) Run(ctx context.Context, sessionID, code string) (*runners.RunRe
 	}, nil
 }
 
-func getContainerID(ctx context.Context, sessionID string, cli *client.Client) (string, error) {
+func getContainerID(ctx context.Context, session runners.Session, cli *client.Client) (string, error) {
 	log.Printf("listing containers...")
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		All: true,
@@ -129,7 +129,7 @@ func getContainerID(ctx context.Context, sessionID string, cli *client.Client) (
 	}
 	for _, c := range containers {
 		log.Printf("container=%s\n", c.ID)
-		if c.Labels[sessionIDLabel] == sessionID {
+		if c.Labels[sessionIDLabel] == session {
 			return c.ID, nil
 		}
 	}

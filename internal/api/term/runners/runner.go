@@ -5,12 +5,14 @@ import (
 	"io"
 )
 
+type Session = string
+
 type RunResult struct {
 	io.Closer
 	Reader io.Reader
 }
 
 type Interface interface {
-	Run(ctx context.Context, sessionID, code string) (*RunResult, error)
-	Reset(ctx context.Context, sessionID string) error
+	Run(ctx context.Context, session Session, code string) (*RunResult, error)
+	Reset(ctx context.Context, session Session) error
 }
