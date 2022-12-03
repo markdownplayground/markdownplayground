@@ -24,6 +24,8 @@ I want to publish a site:
 - Dynamically:
   - The site is runnable (using sandboxed executors and Oauth login).
 
+![screenshot.png](screenshot.png)
+
 # Usage
 
 Download the [latest release](https://github.com/markdownplayground/markdownplayground/releases/latest), then in a
