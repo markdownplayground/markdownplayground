@@ -7,14 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/markdownplayground/markdownplayground/internal/api/term/runners/k8s"
-
 	"github.com/gin-gonic/gin"
 	"github.com/markdownplayground/markdownplayground/internal/api/config"
 	"github.com/markdownplayground/markdownplayground/internal/api/files"
 	"github.com/markdownplayground/markdownplayground/internal/api/term"
 	"github.com/markdownplayground/markdownplayground/internal/api/term/runners"
 	"github.com/markdownplayground/markdownplayground/internal/api/term/runners/docker"
+	"github.com/markdownplayground/markdownplayground/internal/api/term/runners/k8s"
 	"github.com/markdownplayground/markdownplayground/internal/api/term/runners/local"
 	"github.com/pkg/browser"
 )
@@ -30,7 +29,7 @@ func main() {
 	var runnerName string
 	var openBrowser bool
 	flag.BoolVar(&editEnabled, "e", false, "enable editing")
-	flag.StringVar(&runnerName, "r", "docker", "[docker|local]")
+	flag.StringVar(&runnerName, "r", "docker", "[docker|local|k8s]")
 	flag.BoolVar(&openBrowser, "b", false, "open browser")
 	flag.Parse()
 	dir := "."
